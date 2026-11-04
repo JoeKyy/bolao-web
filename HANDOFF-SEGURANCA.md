@@ -19,3 +19,14 @@ Aberto em 04/11/2026. A API e os achados BOL-01 a BOL-10 estão em `../back-bola
 ## Ambientes
 
 - Local: `pnpm dev` em localhost:3000 com `NEXT_PUBLIC_API_URL=http://localhost:3333` (`apps/web/.env.local`).
+
+## Perfis, login e auditoria (04/11/2026)
+
+| ID | Item | Estado |
+|---|---|---|
+| WEB-07 | Login com senha cifrada (RSA-OAEP, portado do gestor), "Esqueci minha senha" e recuperação por código | feito, testado no navegador |
+| WEB-08 | Página Usuários com caixas de perfil (tesoureiro, administrador), criação de conta com perfis, aviso do último administrador | feito, testado no navegador |
+| WEB-09 | Tela inicial por perfil ("Bolões que eu administro" só para tesoureiro; "Bolões de que eu participo" para todos), convite do bolão logado sem pedir nome, "Guardar na minha conta" | feito |
+| WEB-10 | Confirmação (`?confirmar=1`) também para resultado já lançado; data do sorteio no formulário de concurso normal; texto da calculadora por tipo; "Atividade da conta" | feito |
+
+Pendente: CI, nonce na CSP (WEB-03) e `NEXT_PUBLIC_API_URL` de produção no build.

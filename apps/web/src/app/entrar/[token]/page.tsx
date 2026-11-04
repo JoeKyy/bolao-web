@@ -1,6 +1,7 @@
 "use client";
-import type { ConvitePublico } from "@bolao/shared";
+import type { ConvitePublico, Eu } from "@bolao/shared";
 import { formatBRL } from "@bolao/shared";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Aviso, Carregando, ErroDeCarga } from "@/components/ui";
@@ -12,6 +13,7 @@ export default function Entrar() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
   const { dados: c, erro, carregando, recarregar } = useRecurso<ConvitePublico>(`/convites/${encodeURIComponent(token)}`);
+  const eu = useRecurso<Eu>("/auth/eu"); // 401 = não está logado; segue pelo link, sem conta
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [falha, setFalha] = useState<string | null>(null);
@@ -21,12 +23,13 @@ export default function Entrar() {
     if (c?.jaInscrito) router.replace(`/b/${encodeURIComponent(token)}`);
   }, [c, router, token]);
 
+  const logado = !!eu.dados;
   async function entrar(e: FormEvent) {
     e.preventDefault();
     setEnviando(true);
     setFalha(null);
     try {
-      await api.post(`/convites/${encodeURIComponent(token)}/inscricao`, { nome, whatsapp });
+      await api.post(`/convites/${encodeURIComponent(token)}/inscricao`, logado ? { whatsapp } : { nome, whatsapp });
       router.replace(`/b/${encodeURIComponent(token)}`);
     } catch (err) {
       setFalha(mensagemDe(err));
@@ -56,12 +59,27 @@ export default function Entrar() {
           ) : (
             <form onSubmit={entrar} className="card space-y-4">
               <Aviso erro={falha} />
-              <div>
-                <label htmlFor="nome" className="label">
-                  Seu nome
-                </label>
-                <input id="nome" required minLength={2} maxLength={60} autoComplete="name" className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
-              </div>
+              {logado ? (
+                <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">
+                  Você vai entrar como <strong>{eu.dados!.nome || eu.dados!.email}</strong>. O bolão fica guardado na sua conta e aparece em qualquer aparelho.
+                </p>
+              ) : (
+                <>
+                  <div>
+                    <label htmlFor="nome" className="label">
+                      Seu nome
+                    </label>
+                    <input id="nome" required minLength={2} maxLength={60} autoComplete="name" className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
+                  </div>
+                  <p className="text-xs text-muted">
+                    Tem conta?{" "}
+                    <Link href="/admin" className="font-semibold text-brand underline">
+                      Entre primeiro
+                    </Link>{" "}
+                    para ver este bolão em qualquer aparelho.
+                  </p>
+                </>
+              )}
               <div>
                 <label htmlFor="whatsapp" className="label">
                   WhatsApp (opcional)

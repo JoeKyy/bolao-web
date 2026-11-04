@@ -8,7 +8,7 @@ import { Calculadora } from "@/components/Calculadora";
 import { PixCard } from "@/components/PixCard";
 import { SeletorDezenas } from "@/components/SeletorDezenas";
 import { Aviso, Carregando, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
-import { api, mensagemDe } from "@/lib/api";
+import { ErroDaApi, api, mensagemDe } from "@/lib/api";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 
@@ -49,6 +49,19 @@ export default function PainelBolao() {
       return false;
     }
   }
+  async function guardarNaConta() {
+    try {
+      await api.post(`${base}/vincular`);
+      setAviso({ ok: "Bolão guardado na sua conta." });
+      await recarregar();
+    } catch (e) {
+      if (e instanceof ErroDaApi && e.status === 401) {
+        router.push("/admin");
+        return;
+      }
+      setAviso({ erro: mensagemDe(e) });
+    }
+  }
   async function remover(id: number) {
     if (!window.confirm("Remover este jogo?")) return;
     try {
@@ -81,6 +94,16 @@ export default function PainelBolao() {
 
       <Aviso erro={aviso.erro} ok={aviso.ok} />
 
+      {p.acesso === "aparelho" && (
+        <div className="nao-imprimir space-y-2 rounded-xl border border-line bg-white p-3 text-sm">
+          <p>
+            Você está vendo este bolão só neste aparelho. Entre na sua conta e guarde o bolão nela para ver em qualquer lugar.
+          </p>
+          <button type="button" className="btn-ghost" onClick={guardarNaConta}>
+            Guardar na minha conta
+          </button>
+        </div>
+      )}
       {eu && (
         <section aria-labelledby="minha" className="card space-y-3 !border-brand/40">
           <div className="flex items-start justify-between gap-3">
@@ -163,10 +186,11 @@ export default function PainelBolao() {
       {!temResultado && (
         <Secao titulo="Quanto eu ganho?" id="calc">
           <Calculadora
+            virada={b.tipo === "VIRADA"}
             estimativa={b.estimativaPremio}
             meuPeso={eu ? Math.min(eu.pago, eu.devido) : 0}
             pesoSimulado={eu?.devido}
-            pesoTotal={p.totais.pesoTotal}
+            pesoTotal={p.totais.pesoPrevisto}
             chanceUmEm={p.chance.umEm}
           />
         </Secao>

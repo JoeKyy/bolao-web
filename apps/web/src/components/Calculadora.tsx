@@ -10,10 +10,12 @@ interface Props {
   chanceUmEm: number | null;
   /** Peso se a pessoa ainda não pagou: o que ela deve (para simular). */
   pesoSimulado?: number;
+  /** A Virada não acumula; concurso normal acumula (BAUD-11). */
+  virada: boolean;
 }
 
 /** "Quanto eu ganho se o bolão acertar?" Simulação, não promessa. */
-export function Calculadora({ estimativa, meuPeso, pesoTotal, chanceUmEm, pesoSimulado }: Props) {
+export function Calculadora({ estimativa, meuPeso, pesoTotal, chanceUmEm, pesoSimulado, virada }: Props) {
   const [premioTxt, setPremioTxt] = useState(estimativa ? (estimativa / 100).toLocaleString("pt-BR") : "");
   const [ganhadores, setGanhadores] = useState(1);
   const premio = parseReais(premioTxt) ?? 0;
@@ -64,7 +66,7 @@ export function Calculadora({ estimativa, meuPeso, pesoTotal, chanceUmEm, pesoSi
         </p>
       </div>
       <p className="text-xs text-muted">
-        Chance do bolão fazer a sena: <strong>{umEm(chanceUmEm)}</strong>. É simulação: a Mega da Virada não acumula, e o prêmio real
+        Chance do bolão fazer a sena: <strong>{umEm(chanceUmEm)}</strong>. É simulação: {virada ? "a Mega da Virada não acumula (sem ganhador da sena, o prêmio desce para a quina)" : "se ninguém acertar a sena o prêmio acumula para o próximo concurso"}, e o prêmio real
         depende de quantos acertarem. Aposte só o que pode perder.
       </p>
     </div>
