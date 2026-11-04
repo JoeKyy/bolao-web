@@ -329,7 +329,7 @@ export default function Admin() {
         <Aviso erro={falha} />
         <form onSubmit={trocarSenha} className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
           <input aria-label="Senha atual" type="password" required autoComplete="current-password" placeholder="Senha atual" className="input" value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} />
-          <input aria-label="Nova senha" type="password" required minLength={12} autoComplete="new-password" placeholder="Nova senha (12+)" className="input" value={senhaNova} onChange={(e) => setSenhaNova(e.target.value)} />
+          <input aria-label="Nova senha" type="password" required minLength={12} maxLength={128} autoComplete="new-password" placeholder="Nova senha (12+)" className="input" value={senhaNova} onChange={(e) => setSenhaNova(e.target.value)} />
           <button type="submit" className="btn-ghost">
             Trocar senha
           </button>

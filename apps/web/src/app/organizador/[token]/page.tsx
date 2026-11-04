@@ -77,9 +77,9 @@ export default function ConviteOrganizador() {
         )}
         <div>
           <label htmlFor="senha" className="label">
-            Senha (12 ou mais caracteres)
+            Senha (12 a 128 caracteres)
           </label>
-          <input id="senha" type="password" required minLength={SENHA_MINIMA} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+          <input id="senha" type="password" required minLength={SENHA_MINIMA} maxLength={128} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
           <p className="mt-1 text-xs text-muted">Evite senhas comuns, sequências e o seu nome ou e-mail. Uma frase com palavras soltas funciona bem.</p>
         </div>
         <div>

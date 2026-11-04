@@ -94,7 +94,7 @@ export default function Recuperar() {
             <label htmlFor="nova" className="label">
               Nova senha (12 ou mais caracteres)
             </label>
-            <input id="nova" type="password" required minLength={12} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+            <input id="nova" type="password" required minLength={12} maxLength={128} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
           </div>
           <div>
             <label htmlFor="confirma" className="label">
