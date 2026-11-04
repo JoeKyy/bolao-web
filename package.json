@@ -1,0 +1,15 @@
+{
+  "name": "bolao-web",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "start": "pnpm --filter web start",
+    "typecheck": "pnpm --filter web typecheck",
+    "lint": "pnpm --filter web lint",
+    "test": "pnpm --filter web test",
+    "contrato:gerar": "CONTRATO_DIR=packages/shared/src node scripts/gerar-contrato.mjs",
+    "contrato:conferir": "CONTRATO_DIR=packages/shared/src node scripts/gerar-contrato.mjs --conferir"
+  }
+}
