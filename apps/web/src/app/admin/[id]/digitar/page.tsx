@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { Aviso, Bolinha, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
-import { api, mensagemDe } from "@/lib/api";
+import { api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { useRecurso } from "@/lib/useRecurso";
 
 /** Um jogo por tela, com dezenas grandes, para digitar no app Loterias Caixa e marcar como registrado. */
@@ -32,7 +32,8 @@ export default function Digitar() {
   async function marcar(registrado: boolean) {
     if (!atual) return;
     try {
-      await api.post(`${base}/jogos/${atual.id}/registro`, { registrado, comprovante: comprovante || null });
+      const feito = await comConfirmacao((q) => api.post(`${base}/jogos/${atual.id}/registro${q}`, { registrado, comprovante: comprovante || null }).then(() => true));
+      if (!feito) return;
       setComprovante("");
       setAviso({ ok: registrado ? "Registrado. Próximo jogo." : "Registro desfeito." });
       if (!soPendentes) setI((x) => Math.min(x + 1, fila.length - 1));

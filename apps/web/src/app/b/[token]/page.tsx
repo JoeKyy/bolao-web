@@ -166,7 +166,7 @@ export default function PainelBolao() {
             estimativa={b.estimativaPremio}
             meuPeso={eu ? Math.min(eu.pago, eu.devido) : 0}
             pesoSimulado={eu?.devido}
-            pesoTotal={p.totais.pesoTotal}
+            pesoTotal={p.totais.pesoPrevisto}
             chanceUmEm={p.chance.umEm}
           />
         </Secao>

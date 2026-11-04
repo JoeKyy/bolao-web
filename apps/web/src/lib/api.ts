@@ -48,3 +48,20 @@ export const api = {
 };
 
 export const mensagemDe = (e: unknown) => (e instanceof ErroDaApi ? e.message : "Algo deu errado. Tente de novo.");
+
+/**
+ * Bolão travado (sorteio passou ou resultado lançado): a API recusa com `bolao_travado` o que
+ * mexe no rateio. Aqui o organizador confirma e a chamada é repetida com `?confirmar=1`.
+ * Devolve undefined se ele desistir.
+ */
+export async function comConfirmacao<T>(fazer: (sufixo: string) => Promise<T>): Promise<T | undefined> {
+  try {
+    return await fazer("");
+  } catch (e) {
+    if (e instanceof ErroDaApi && e.codigo === "bolao_travado") {
+      if (!window.confirm(`${e.message}\n\nContinuar?`)) return undefined;
+      return await fazer("?confirmar=1");
+    }
+    throw e;
+  }
+}

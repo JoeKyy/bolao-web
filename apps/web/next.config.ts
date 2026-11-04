@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
-const API_ORIGIN = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3333").origin;
 const PRODUCAO = process.env.NODE_ENV === "production";
+// SEC-12: build de produção sem a URL da API falha, em vez de apontar para localhost em silêncio.
+if (PRODUCAO && !process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Defina NEXT_PUBLIC_API_URL para o build de produção.");
+}
+const API_ORIGIN = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3333").origin;
 
 /**
  * CSP (BOL-08). O Next injeta scripts inline para hidratar, então `script-src` ainda precisa de

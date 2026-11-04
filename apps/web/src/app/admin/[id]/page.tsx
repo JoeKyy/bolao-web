@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { SeletorDezenas } from "@/components/SeletorDezenas";
 import { Aviso, BotaoCopiar, Carregando, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
-import { API_URL, ErroDaApi, api, mensagemDe } from "@/lib/api";
+import { API_URL, api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { formatarDataHora, umEm } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 
@@ -49,17 +49,8 @@ function Participante({
       avisar({ erro: mensagemDe(e) });
     }
   };
-  async function pagar(valor?: number) {
-    const corpo = valor === undefined ? {} : { valor };
-    try {
-      await api.post(`${base}/participantes/${p.id}/pagamento`, corpo);
-    } catch (e) {
-      if (e instanceof ErroDaApi && e.codigo === "tem_resultado") {
-        if (!window.confirm(`${e.message}\n\nContinuar?`)) return;
-        await api.post(`${base}/participantes/${p.id}/pagamento`, { ...corpo, confirmarComResultado: true });
-      } else throw e;
-    }
-  }
+  const pagar = (valor?: number) =>
+    comConfirmacao((q) => api.post(`${base}/participantes/${p.id}/pagamento${q}`, valor === undefined ? {} : { valor }));
   const falta = p.devido - p.pago;
 
   return (
@@ -123,7 +114,7 @@ function Participante({
                 </p>
               </div>
               {!j.registrado && (
-                <button type="button" className="text-xs font-semibold text-red-700" onClick={() => window.confirm("Remover este jogo?") && faz(() => api.del(`${base}/jogos/${j.id}`), "Jogo removido.")}>
+                <button type="button" className="text-xs font-semibold text-red-700" onClick={() => window.confirm("Remover este jogo?") && faz(() => comConfirmacao((q) => api.del(`${base}/jogos/${j.id}${q}`)), "Jogo removido.")}>
                   Remover
                 </button>
               )}
@@ -154,7 +145,7 @@ function Participante({
         <button
           type="button"
           className="btn-danger"
-          onClick={() => window.confirm(`Remover ${p.nome} e os jogos dele do bolão?`) && faz(() => api.del(`${base}/participantes/${p.id}`), "Participante removido.")}
+          onClick={() => window.confirm(`Remover ${p.nome} e os jogos dele do bolão?`) && faz(() => comConfirmacao((q) => api.del(`${base}/participantes/${p.id}${q}`)), "Participante removido.")}
         >
           Remover participante
         </button>
@@ -179,7 +170,8 @@ function SeletorDezenasAdmin({
   const [lista, setLista] = useState("");
   async function enviar(jogos: number[][], surpresinha = false) {
     try {
-      await api.post(`${base}/jogos`, { participanteId, jogos, surpresinha });
+      const feito = await comConfirmacao((q) => api.post(`${base}/jogos${q}`, { participanteId, jogos, surpresinha }).then(() => true));
+      if (!feito) return false;
       avisar({ ok: `${jogos.length} jogo(s) incluído(s).` });
       await recarregar();
       return true;
@@ -337,7 +329,7 @@ function Configuracoes({ r, base, avisar, recarregar }: { r: ResumoAdmin; base: 
     const estimativa = f.estimativa ? parseReais(f.estimativa) : null;
     if (!preco) return avisar({ erro: "Preço da aposta inválido." });
     try {
-      await api.patch(base, {
+      await comConfirmacao((q) => api.patch(`${base}${q}`, {
         nome: f.nome,
         concurso: f.concurso ? Number(f.concurso) : null,
         dataSorteio: deLocal(f.dataSorteio),
@@ -349,7 +341,7 @@ function Configuracoes({ r, base, avisar, recarregar }: { r: ResumoAdmin; base: 
         pixNome: f.pixNome || null,
         pixCidade: f.pixCidade || null,
         estimativaPremio: estimativa,
-      });
+      }));
       avisar({ ok: "Configurações salvas." });
       await recarregar();
     } catch (err) {
@@ -463,6 +455,12 @@ export default function GestaoBolao() {
         </p>
       </header>
       <Aviso erro={aviso.erro} ok={aviso.ok} />
+      {b.travado && (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          {b.resultado ? "Resultado lançado." : "O horário do sorteio já passou."} Inscrições e jogos novos estão fechados, e qualquer mudança que mexa no rateio pede
+          confirmação e fica no histórico. Só jogos registrados na Caixa entram no rateio.
+        </p>
+      )}
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Numero rotulo="Participantes" valor={String(r.participantes.length)} />
@@ -486,9 +484,11 @@ export default function GestaoBolao() {
           <span className={`chip ${b.inscricoesAbertas ? "bg-brand-soft text-brand-dark" : "bg-amber-100 text-amber-800"}`}>
             Inscrições {b.inscricoesAbertas ? "abertas" : "encerradas"}
           </span>
-          <button type="button" className="btn-ghost" onClick={() => faz(() => api.post(`${base}/inscricoes`, { abertas: !b.inscricoesAbertas }))}>
-            {b.inscricoesAbertas ? "Encerrar inscrições" : "Reabrir inscrições"}
-          </button>
+          {(b.inscricoesAbertas || !b.travado) && (
+            <button type="button" className="btn-ghost" onClick={() => faz(() => api.post(`${base}/inscricoes`, { abertas: !b.inscricoesAbertas }))}>
+              {b.inscricoesAbertas ? "Encerrar inscrições" : "Reabrir inscrições"}
+            </button>
+          )}
           <button
             type="button"
             className="btn-ghost"
