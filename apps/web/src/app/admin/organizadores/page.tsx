@@ -56,10 +56,10 @@ export default function Organizadores() {
       setAviso({ erro: mensagemDe(err) });
     }
   }
-  async function trocaSenha(o: OrganizadorDTO) {
+  async function novoLink(o: OrganizadorDTO) {
     try {
-      const convite = await api.post<ConviteOrganizadorCriado>(`/organizadores/${o.id}/troca-senha`);
-      setGerado({ titulo: "Trocar a senha", convite, nome: o.nome });
+      const convite = await api.post<ConviteOrganizadorCriado>(`/organizadores/${o.id}/link`);
+      setGerado({ titulo: o.pendente ? "Criar a conta" : "Trocar a senha", convite, nome: o.nome });
     } catch (err) {
       setAviso({ erro: mensagemDe(err) });
     }
@@ -109,6 +109,7 @@ export default function Organizadores() {
                   {o.nome || o.email}
                   {o.papel === "ADMIN" && <span className="chip ml-2 bg-foreground text-white">admin</span>}
                   {!o.ativo && <span className="chip ml-2 bg-red-100 text-red-800">desativado</span>}
+                  {o.ativo && o.pendente && <span className="chip ml-2 bg-amber-100 text-amber-800">convite pendente</span>}
                 </p>
                 <p className="truncate text-xs text-muted">
                   {o.email} · {o.boloes} bolão(ões) · desde {formatarDataHora(o.criadoEm).slice(0, 10)}
@@ -117,8 +118,8 @@ export default function Organizadores() {
               {o.id !== eu.dados?.id && (
                 <div className="flex gap-2">
                   {o.ativo && (
-                    <button type="button" className="btn-ghost" onClick={() => trocaSenha(o)}>
-                      Link de nova senha
+                    <button type="button" className="btn-ghost" onClick={() => novoLink(o)}>
+                      {o.pendente ? "Reenviar convite" : "Link de nova senha"}
                     </button>
                   )}
                   <button type="button" className={o.ativo ? "btn-danger" : "btn-ghost"} onClick={() => alternar(o)}>

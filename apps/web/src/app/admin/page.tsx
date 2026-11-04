@@ -4,8 +4,9 @@ import { formatBRL } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Aviso, Carregando, ErroDeCarga } from "@/components/ui";
+import { Aviso, BotaoCopiar, Carregando, ErroDeCarga } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
+import { entrarComSenha } from "@/lib/loginCripto";
 import { useRecurso } from "@/lib/useRecurso";
 
 function Login({ aoEntrar }: { aoEntrar: () => void }) {
@@ -18,7 +19,7 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
     setEnviando(true);
     setErro(null);
     try {
-      await api.post("/auth/entrar", { email, senha });
+      await entrarComSenha(email, senha);
       aoEntrar();
     } catch (err) {
       setErro(mensagemDe(err));
@@ -51,10 +52,63 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
           {enviando ? "Entrando…" : "Entrar"}
         </button>
       </form>
-      <Link href="/" className="text-sm text-muted underline">
-        Voltar
-      </Link>
+      <div className="flex justify-between text-sm">
+        <Link href="/recuperar" className="font-semibold text-brand underline">
+          Esqueci minha senha
+        </Link>
+        <Link href="/" className="text-muted underline">
+          Voltar
+        </Link>
+      </div>
     </main>
+  );
+}
+
+/** Códigos de recuperação (como no gestor): gerados com a senha atual, mostrados uma vez. */
+function CodigosRecuperacao() {
+  const { dados, recarregar } = useRecurso<{ restantes: number }>("/auth/codigos");
+  const [senha, setSenha] = useState("");
+  const [codigos, setCodigos] = useState<string[] | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  async function gerar(e: FormEvent) {
+    e.preventDefault();
+    if (dados?.restantes && !window.confirm("Gerar códigos novos? Os que você guardou antes deixam de valer.")) return;
+    try {
+      const r = await api.post<{ codigos: string[] }>("/auth/codigos", { senha });
+      setCodigos(r.codigos);
+      setSenha("");
+      setErro(null);
+      await recarregar();
+    } catch (err) {
+      setErro(mensagemDe(err));
+    }
+  }
+  return (
+    <div className="mt-4 space-y-2 border-t border-line pt-4">
+      <h3 className="text-sm font-semibold">Códigos de recuperação</h3>
+      <p className="text-xs text-muted">
+        Servem para trocar a senha se você esquecer, sem depender de e-mail nem do administrador. Você tem {dados?.restantes ?? 0} código(s) válido(s).
+      </p>
+      <Aviso erro={erro} />
+      {codigos ? (
+        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <p className="text-sm font-semibold text-amber-900">Guarde estes códigos agora. Eles não aparecem de novo.</p>
+          <ul className="grid grid-cols-2 gap-1 font-mono text-sm">
+            {codigos.map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
+          <BotaoCopiar texto={codigos.join("\n")} rotulo="Copiar códigos" />
+        </div>
+      ) : (
+        <form onSubmit={gerar} className="flex gap-2">
+          <input aria-label="Senha atual para gerar códigos" type="password" required autoComplete="current-password" placeholder="Senha atual" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+          <button type="submit" className="btn-ghost shrink-0">
+            Gerar códigos
+          </button>
+        </form>
+      )}
+    </div>
   );
 }
 
@@ -177,6 +231,7 @@ export default function Admin() {
           </button>
         </form>
         <p className="mt-2 text-xs text-muted">Trocar a senha encerra as sessões em todos os aparelhos.</p>
+        <CodigosRecuperacao />
       </details>
     </main>
   );

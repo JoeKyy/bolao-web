@@ -62,17 +62,25 @@ export default function ConviteOrganizador() {
           <p className="label">E-mail</p>
           <p className="text-sm font-medium">{c.email}</p>
         </div>
-        <div>
-          <label htmlFor="nome" className="label">
-            Seu nome
-          </label>
-          <input id="nome" required minLength={2} maxLength={60} autoComplete="name" className="input" value={nomeAtual} onChange={(e) => setNome(e.target.value)} />
-        </div>
+        {c.tipo === "novo" ? (
+          <div>
+            <label htmlFor="nome" className="label">
+              Seu nome
+            </label>
+            <input id="nome" required minLength={2} maxLength={60} autoComplete="name" className="input" value={nomeAtual} onChange={(e) => setNome(e.target.value)} />
+          </div>
+        ) : (
+          <div>
+            <p className="label">Nome</p>
+            <p className="text-sm font-medium">{c.nome}</p>
+          </div>
+        )}
         <div>
           <label htmlFor="senha" className="label">
             Senha (12 ou mais caracteres)
           </label>
           <input id="senha" type="password" required minLength={SENHA_MINIMA} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+          <p className="mt-1 text-xs text-muted">Evite senhas comuns, sequências e o seu nome ou e-mail. Uma frase com palavras soltas funciona bem.</p>
         </div>
         <div>
           <label htmlFor="confirma" className="label">
