@@ -3,6 +3,14 @@ name: Deploy
 # Economia (a VPS tem pouco disco e memória): só publica o que mexe no código. Documentação e
 # modelos de .env não disparam nada. Promova em LOTE (vários commits no dev, um PR para homolog).
 on:
+  # Produção só por disparo manual na main, com a frase de confirmação (o plano gratuito do
+  # GitHub não oferece aprovação obrigatória em repositório privado). Homologação publica sozinha.
+  workflow_dispatch:
+    inputs:
+      confirmar:
+        description: 'Para publicar em PRODUÇÃO (branch main), digite: publicar producao'
+        required: false
+        default: ''
   push:
     branches: [main, homolog, dev]
     paths-ignore: ["**/*.md", "deploy/env.*.example"]
@@ -49,7 +57,7 @@ jobs:
 
   guarda:
     name: Origem do commit
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -78,15 +86,19 @@ jobs:
   deploy:
     name: Publicar na VPS
     needs: [verify, guarda]
+    # Homologação: push na branch homolog. Produção: disparo manual na main com a frase certa
+    # (e só se a origem do commit passou pela guarda).
     if: |
-      always() && needs.verify.result == 'success'
-      && github.event_name == 'push'
+      always() && needs.verify.result == 'success' && true
       && (
-        github.ref == 'refs/heads/homolog'
-        || (github.ref == 'refs/heads/main' && needs.guarda.result == 'success')
+        (github.event_name == 'push' && github.ref == 'refs/heads/homolog')
+        || (
+          github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+          && inputs.confirmar == 'publicar producao' && needs.guarda.result == 'success'
+        )
       )
     runs-on: ubuntu-latest
-    # Produção exige aprovação manual do Joe (Settings > Environments > producao > Required reviewers).
+    # Produção: disparo manual com confirmação (ver `on.workflow_dispatch`).
     environment: ${{ github.ref == 'refs/heads/main' && 'producao' || 'homologacao' }}
     env:
       AMBIENTE: ${{ github.ref == 'refs/heads/main' && 'producao' || 'homolog' }}
