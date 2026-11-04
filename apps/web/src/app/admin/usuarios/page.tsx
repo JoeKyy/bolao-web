@@ -3,10 +3,11 @@ import type { ConviteOrganizadorCriado, Eu, UsuarioDTO } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { Aviso, BotaoCopiar, Carregando, ErroDeCarga, Secao } from "@/components/ui";
+import { Aviso, BotaoCopiar, Campo, Carregando, ErroDeCarga, Secao } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
+import { useValidacao } from "@/lib/validacao";
 
 /** Link gerado: aparece uma vez só, para o administrador repassar. */
 function LinkGerado({ titulo, convite, nome }: { titulo: string; convite: ConviteOrganizadorCriado; nome: string }) {
@@ -53,6 +54,7 @@ export default function Usuarios() {
   const [nome, setNome] = useState("");
   const [admin, setAdmin] = useState(false);
   const [tesoureiro, setTesoureiro] = useState(true);
+  const v = useValidacao();
   const [aviso, setAviso] = useState<{ erro?: string; ok?: string }>({});
   const [gerado, setGerado] = useState<{ titulo: string; convite: ConviteOrganizadorCriado; nome: string } | null>(null);
 
@@ -85,8 +87,10 @@ export default function Usuarios() {
       setAviso({ erro: mensagemDe(err) });
     }
   };
-  async function criar(e: FormEvent) {
+  async function criar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setAviso({});
+    if (!v.validar(e)) return;
     try {
       const convite = await api.post<ConviteOrganizadorCriado>("/usuarios", { email, nome, admin, tesoureiro });
       setGerado({ titulo: "Criar a conta", convite, nome });
@@ -97,7 +101,7 @@ export default function Usuarios() {
       setTesoureiro(true);
       await recarregar();
     } catch (err) {
-      setAviso({ erro: mensagemDe(err) });
+      if (!v.doServidor(err, { nome: "nome-conta", email: "email-conta" })) setAviso({ erro: mensagemDe(err) });
     }
   }
   async function novoLink(u: UsuarioDTO) {
@@ -128,14 +132,18 @@ export default function Usuarios() {
           Os perfis se combinam: uma pessoa pode ser administradora, tesoureira, as duas coisas ou nenhuma (só participa de bolões). Sempre precisa existir ao menos um administrador ativo.
         </p>
       </header>
-      <Aviso erro={aviso.erro} ok={aviso.ok} />
+      <Aviso erro={aviso.erro ?? v.resumo} ok={aviso.ok} />
       {gerado && <LinkGerado {...gerado} />}
 
       <Secao titulo="Nova conta" id="nova">
-        <form onSubmit={criar} className="space-y-3">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <input aria-label="Nome" required minLength={2} maxLength={60} placeholder="Nome" className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
-            <input aria-label="E-mail" type="email" required maxLength={120} placeholder="E-mail" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <form onSubmit={criar} noValidate className="space-y-3">
+          <div className="grid items-start gap-2 sm:grid-cols-2">
+            <Campo id="nome-conta" rotulo="Nome" erro={v.erros["nome-conta"]} limpar={v.limpar}>
+              <input required minLength={2} maxLength={60} placeholder="Nome da pessoa" className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
+            </Campo>
+            <Campo id="email-conta" rotulo="E-mail" erro={v.erros["email-conta"]} limpar={v.limpar}>
+              <input type="email" required maxLength={120} placeholder="nome@exemplo.com" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </Campo>
           </div>
           <div className="space-y-2">
             <Perfil rotulo="Tesoureiro" dica={DICA_TESOUREIRO} marcado={tesoureiro} onChange={setTesoureiro} />

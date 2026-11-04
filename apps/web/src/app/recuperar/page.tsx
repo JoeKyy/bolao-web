@@ -2,8 +2,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Aviso } from "@/components/ui";
+import { Aviso, Campo } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
+import { useValidacao } from "@/lib/validacao";
 
 /** "Esqueci minha senha", no esquema do gestor: link por e-mail ou código de recuperação. */
 export default function Recuperar() {
@@ -15,9 +16,12 @@ export default function Recuperar() {
   const [confirma, setConfirma] = useState("");
   const [aviso, setAviso] = useState<{ erro?: string; ok?: string }>({});
   const [enviando, setEnviando] = useState(false);
+  const v = useValidacao();
 
-  async function porEmail(e: FormEvent) {
+  async function porEmail(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setAviso({});
+    if (!v.validar(e)) return;
     setEnviando(true);
     try {
       const r = await api.post<{ mensagem: string }>("/auth/esqueci", { email });
@@ -28,15 +32,17 @@ export default function Recuperar() {
       setEnviando(false);
     }
   }
-  async function porCodigo(e: FormEvent) {
+  async function porCodigo(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (senha !== confirma) return setAviso({ erro: "As senhas não conferem." });
+    setAviso({});
+    if (!v.validar(e)) return;
+    if (senha !== confirma) return v.marcar("confirma", "As senhas não conferem. Digite a mesma senha nos dois campos.");
     setEnviando(true);
     try {
       await api.post("/auth/recuperar", { email, codigo, novaSenha: senha });
       router.replace("/admin");
     } catch (err) {
-      setAviso({ erro: mensagemDe(err) });
+      if (!v.doServidor(err, { email: "email2", codigo: "codigo", novaSenha: "nova" }, "nova")) setAviso({ erro: mensagemDe(err) });
       setEnviando(false);
     }
   }
@@ -61,47 +67,32 @@ export default function Recuperar() {
           </button>
         ))}
       </div>
-      <Aviso erro={aviso.erro} ok={aviso.ok} />
+      <Aviso erro={aviso.erro ?? v.resumo} ok={aviso.ok} />
       {modo === "email" ? (
-        <form onSubmit={porEmail} className="card space-y-3">
+        <form onSubmit={porEmail} noValidate className="card space-y-3">
           <p className="text-sm text-muted">Mandamos um link para definir uma nova senha. Se não chegar, peça ao administrador um link novo.</p>
-          <div>
-            <label htmlFor="email" className="label">
-              E-mail
-            </label>
-            <input id="email" type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
+          <Campo id="email" rotulo="E-mail" erro={v.erros.email} limpar={v.limpar}>
+            <input type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </Campo>
           <button type="submit" className="btn w-full" disabled={enviando}>
             Enviar link
           </button>
         </form>
       ) : (
-        <form onSubmit={porCodigo} className="card space-y-3">
+        <form onSubmit={porCodigo} noValidate className="card space-y-3">
           <p className="text-sm text-muted">Use um dos códigos de recuperação que você guardou. Cada código vale uma vez.</p>
-          <div>
-            <label htmlFor="email2" className="label">
-              E-mail
-            </label>
-            <input id="email2" type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <div>
-            <label htmlFor="codigo" className="label">
-              Código (XXXX-XXXX-XXXX)
-            </label>
-            <input id="codigo" required maxLength={20} autoComplete="one-time-code" className="input font-mono uppercase" value={codigo} onChange={(e) => setCodigo(e.target.value)} />
-          </div>
-          <div>
-            <label htmlFor="nova" className="label">
-              Nova senha (12 ou mais caracteres)
-            </label>
-            <input id="nova" type="password" required minLength={12} maxLength={128} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
-          </div>
-          <div>
-            <label htmlFor="confirma" className="label">
-              Repita a nova senha
-            </label>
-            <input id="confirma" type="password" required autoComplete="new-password" className="input" value={confirma} onChange={(e) => setConfirma(e.target.value)} />
-          </div>
+          <Campo id="email2" rotulo="E-mail" erro={v.erros.email2} limpar={v.limpar}>
+            <input type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </Campo>
+          <Campo id="codigo" rotulo="Código (XXXX-XXXX-XXXX)" erro={v.erros.codigo} limpar={v.limpar}>
+            <input required maxLength={20} autoComplete="one-time-code" className="input font-mono uppercase" value={codigo} onChange={(e) => setCodigo(e.target.value)} />
+          </Campo>
+          <Campo id="nova" rotulo="Nova senha (12 ou mais caracteres)" erro={v.erros.nova} limpar={v.limpar}>
+            <input type="password" required minLength={12} maxLength={128} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+          </Campo>
+          <Campo id="confirma" rotulo="Repita a nova senha" erro={v.erros.confirma} limpar={v.limpar}>
+            <input type="password" required autoComplete="new-password" className="input" value={confirma} onChange={(e) => setConfirma(e.target.value)} />
+          </Campo>
           <button type="submit" className="btn w-full" disabled={enviando}>
             Trocar senha e entrar
           </button>

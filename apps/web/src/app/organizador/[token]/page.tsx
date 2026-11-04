@@ -2,9 +2,10 @@
 import type { ConviteOrganizadorPublico } from "@bolao/shared";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Aviso, Carregando, ErroDeCarga } from "@/components/ui";
+import { Aviso, Campo, Carregando, ErroDeCarga } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { useRecurso } from "@/lib/useRecurso";
+import { useValidacao } from "@/lib/validacao";
 
 const SENHA_MINIMA = 12;
 
@@ -18,6 +19,7 @@ export default function ConviteOrganizador() {
   const [confirma, setConfirma] = useState("");
   const [falha, setFalha] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const v = useValidacao();
 
   if (carregando) return <Carregando />;
   if (erro) {
@@ -30,17 +32,17 @@ export default function ConviteOrganizador() {
   if (!c) return null;
   const nomeAtual = nome ?? c.nome;
 
-  async function enviar(e: FormEvent) {
+  async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (senha !== confirma) return setFalha("As senhas não conferem.");
-    if (senha.length < SENHA_MINIMA) return setFalha(`A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`);
-    setEnviando(true);
     setFalha(null);
+    if (!v.validar(e)) return;
+    if (senha !== confirma) return v.marcar("confirma", "As senhas não conferem. Digite a mesma senha nos dois campos.");
+    setEnviando(true);
     try {
       await api.post(`/convite-organizador/${encodeURIComponent(token)}`, { nome: nomeAtual, senha });
       router.replace("/admin");
     } catch (err) {
-      setFalha(mensagemDe(err));
+      if (!v.doServidor(err, { nome: "nome", senha: "senha" }, "senha")) setFalha(mensagemDe(err));
       setEnviando(false);
     }
   }
@@ -56,38 +58,28 @@ export default function ConviteOrganizador() {
             : "Depois de trocar, as sessões abertas em outros aparelhos são encerradas."}
         </p>
       </div>
-      <form onSubmit={enviar} className="card space-y-3">
-        <Aviso erro={falha} />
+      <form onSubmit={enviar} noValidate className="card space-y-3">
+        <Aviso erro={falha ?? v.resumo} />
         <div>
           <p className="label">E-mail</p>
           <p className="text-sm font-medium">{c.email}</p>
         </div>
         {c.tipo === "novo" ? (
-          <div>
-            <label htmlFor="nome" className="label">
-              Seu nome
-            </label>
-            <input id="nome" required minLength={2} maxLength={60} autoComplete="name" className="input" value={nomeAtual} onChange={(e) => setNome(e.target.value)} />
-          </div>
+          <Campo id="nome" rotulo="Seu nome" erro={v.erros.nome} limpar={v.limpar}>
+            <input required minLength={2} maxLength={60} autoComplete="name" className="input" value={nomeAtual} onChange={(e) => setNome(e.target.value)} />
+          </Campo>
         ) : (
           <div>
             <p className="label">Nome</p>
             <p className="text-sm font-medium">{c.nome}</p>
           </div>
         )}
-        <div>
-          <label htmlFor="senha" className="label">
-            Senha (12 a 128 caracteres)
-          </label>
-          <input id="senha" type="password" required minLength={SENHA_MINIMA} maxLength={128} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
-          <p className="mt-1 text-xs text-muted">Evite senhas comuns, sequências e o seu nome ou e-mail. Uma frase com palavras soltas funciona bem.</p>
-        </div>
-        <div>
-          <label htmlFor="confirma" className="label">
-            Repita a senha
-          </label>
-          <input id="confirma" type="password" required autoComplete="new-password" className="input" value={confirma} onChange={(e) => setConfirma(e.target.value)} />
-        </div>
+        <Campo id="senha" rotulo="Senha (12 a 128 caracteres)" erro={v.erros.senha} dica="Evite senhas comuns, sequências e o seu nome ou e-mail. Uma frase com palavras soltas funciona bem." limpar={v.limpar}>
+          <input type="password" required minLength={SENHA_MINIMA} maxLength={128} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+        </Campo>
+        <Campo id="confirma" rotulo="Repita a senha" erro={v.erros.confirma} limpar={v.limpar}>
+          <input type="password" required autoComplete="new-password" className="input" value={confirma} onChange={(e) => setConfirma(e.target.value)} />
+        </Campo>
         <button type="submit" className="btn w-full" disabled={enviando}>
           {enviando ? "Salvando…" : c.tipo === "novo" ? "Criar conta" : "Trocar senha"}
         </button>
