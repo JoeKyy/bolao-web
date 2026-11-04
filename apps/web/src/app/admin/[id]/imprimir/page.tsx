@@ -2,8 +2,9 @@
 import type { ResumoAdmin } from "@bolao/shared";
 import { MAX_NUMERO, formatBRL, formatDezena } from "@bolao/shared";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+
+import { useEffect, useState } from "react";
 import { Carregando, ErroDeCarga } from "@/components/ui";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
@@ -30,8 +31,13 @@ export default function Imprimir() {
   const { id } = useParams<{ id: string }>();
   const base = `/boloes/${encodeURIComponent(id)}`;
   const { dados: r, erro, carregando, recarregar } = useRecurso<ResumoAdmin>(base);
+  const router = useRouter();
+  // Só o organizador (tesoureiro) chega aqui: sem sessão, vai para o login.
+  useEffect(() => {
+    if (erro?.status === 401) router.replace("/admin");
+  }, [erro, router]);
   const [filtro, setFiltro] = useState<"pagos" | "todos">("pagos");
-  if (carregando) return <Carregando />;
+  if (carregando || erro?.status === 401) return <Carregando />;
   if (erro || !r) return <main className="mx-auto max-w-md px-4 py-10"><ErroDeCarga mensagem={erro?.message ?? "Erro"} tentar={recarregar} /></main>;
 
   const quitado = new Set(r.participantes.filter((p) => p.situacao === "quitado").map((p) => p.id));
