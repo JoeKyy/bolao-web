@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const PRODUCAO = process.env.NODE_ENV === "production";
@@ -29,6 +30,10 @@ const csp = [
 const nextConfig: NextConfig = {
   transpilePackages: ["@bolao/shared"],
   poweredByHeader: false,
+  // Imagem Docker enxuta: o build traz só o que o servidor usa (a VPS tem pouco disco e memória).
+  output: "standalone",
+  // Monorepo: o rastreamento de arquivos parte da raiz, para incluir packages/shared.
+  outputFileTracingRoot: path.join(__dirname, "../.."),
   async headers() {
     return [
       {
