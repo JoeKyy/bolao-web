@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
-import { Carregando, ErroDeCarga } from "@/components/ui";
+import { Carregando, NaoEncontrado, ErroDeCarga } from "@/components/ui";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 
@@ -38,6 +38,7 @@ export default function Imprimir() {
   }, [erro, router]);
   const [filtro, setFiltro] = useState<"pagos" | "todos">("pagos");
   if (carregando || erro?.status === 401) return <Carregando />;
+  if (erro?.status === 404) return <NaoEncontrado />;
   if (erro || !r) return <main className="mx-auto max-w-md px-4 py-10"><ErroDeCarga mensagem={erro?.message ?? "Erro"} tentar={recarregar} /></main>;
 
   const quitado = new Set(r.participantes.filter((p) => p.situacao === "quitado").map((p) => p.id));

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { SeletorDezenas } from "@/components/SeletorDezenas";
-import { Aviso, BotaoCopiar, Carregando, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
+import { Aviso, NaoEncontrado, BotaoCopiar, Carregando, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
 import { API_URL, api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { formatarDataHora, umEm } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
@@ -423,6 +423,7 @@ export default function GestaoBolao() {
     router.replace("/admin");
     return null;
   }
+  if (erro?.status === 404) return <NaoEncontrado />;
   if (erro) return <main className="mx-auto max-w-2xl px-4 py-10"><ErroDeCarga mensagem={erro.message} tentar={recarregar} /></main>;
   if (!r) return null;
   const b = r.bolao;

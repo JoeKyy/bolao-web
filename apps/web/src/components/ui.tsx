@@ -1,5 +1,6 @@
 "use client";
 import { formatDezena } from "@bolao/shared";
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 export function Aviso({ erro, ok }: { erro?: string | null; ok?: string | null }) {
@@ -105,5 +106,17 @@ export function Numero({ rotulo, valor }: { rotulo: string; valor: string }) {
       <p className="text-xs text-muted">{rotulo}</p>
       <p className="mt-0.5 text-base font-bold tabular-nums sm:text-lg">{valor}</p>
     </div>
+  );
+}
+
+/** Bolão de outro organizador ou inexistente: mesma resposta, sem revelar qual. */
+export function NaoEncontrado() {
+  return (
+    <main className="mx-auto max-w-md space-y-4 px-4 py-10 text-center">
+      <p className="text-sm text-muted">Bolão não encontrado. Ele não existe ou não é um dos seus.</p>
+      <Link href="/admin" className="btn-ghost">
+        Ver meus bolões
+      </Link>
+    </main>
   );
 }

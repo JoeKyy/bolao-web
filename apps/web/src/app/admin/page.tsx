@@ -1,5 +1,5 @@
 "use client";
-import type { BolaoNaLista } from "@bolao/shared";
+import type { BolaoNaLista, Eu } from "@bolao/shared";
 import { formatBRL } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -61,12 +61,15 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
 export default function Admin() {
   const router = useRouter();
   const { dados, erro, carregando, recarregar } = useRecurso<BolaoNaLista[]>("/boloes");
+  const eu = useRecurso<Eu>("/auth/eu");
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [senhaNova, setSenhaNova] = useState("");
   const [nome, setNome] = useState("Mega da Virada 2026");
   const [tipo, setTipo] = useState<"VIRADA" | "NORMAL">("VIRADA");
   const [falha, setFalha] = useState<string | null>(null);
 
   if (carregando) return <Carregando />;
-  if (erro?.status === 401) return <Login aoEntrar={recarregar} />;
+  if (erro?.status === 401) return <Login aoEntrar={() => void Promise.all([recarregar(), eu.recarregar()])} />;
   if (erro) return <main className="mx-auto max-w-2xl px-4 py-10"><ErroDeCarga mensagem={erro.message} tentar={recarregar} /></main>;
 
   async function criar(e: FormEvent) {
@@ -80,19 +83,38 @@ export default function Admin() {
   }
   async function sair() {
     await api.post("/auth/sair").catch(() => undefined);
-    await recarregar();
+    await Promise.all([recarregar(), eu.recarregar()]);
+  }
+  async function trocarSenha(e: FormEvent) {
+    e.preventDefault();
+    try {
+      await api.post("/auth/senha", { atual: senhaAtual, nova: senhaNova });
+      setSenhaAtual("");
+      setSenhaNova("");
+      await recarregar(); // a troca encerra todas as sessões: volta para o login
+    } catch (err) {
+      setFalha(mensagemDe(err));
+    }
   }
 
   return (
     <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand">Organizador</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-brand">Organizador{eu.dados?.nome ? ` · ${eu.dados.nome}` : ""}</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Seus bolões</h1>
+          <p className="mt-1 text-sm text-muted">Você é o tesoureiro: o Pix, os convites, os pagamentos e o registro dos jogos são só seus.</p>
         </div>
-        <button type="button" className="btn-ghost" onClick={sair}>
-          Sair
-        </button>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <button type="button" className="btn-ghost" onClick={sair}>
+            Sair
+          </button>
+          {eu.dados?.papel === "ADMIN" && (
+            <Link href="/admin/organizadores" className="text-sm font-semibold text-brand underline">
+              Organizadores
+            </Link>
+          )}
+        </div>
       </header>
 
       <form onSubmit={criar} className="card space-y-3">
@@ -144,6 +166,18 @@ export default function Admin() {
           </li>
         ))}
       </ul>
+
+      <details className="card">
+        <summary className="cursor-pointer font-semibold">Minha conta</summary>
+        <form onSubmit={trocarSenha} className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          <input aria-label="Senha atual" type="password" required autoComplete="current-password" placeholder="Senha atual" className="input" value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} />
+          <input aria-label="Nova senha" type="password" required minLength={12} autoComplete="new-password" placeholder="Nova senha (12+)" className="input" value={senhaNova} onChange={(e) => setSenhaNova(e.target.value)} />
+          <button type="submit" className="btn-ghost">
+            Trocar senha
+          </button>
+        </form>
+        <p className="mt-2 text-xs text-muted">Trocar a senha encerra as sessões em todos os aparelhos.</p>
+      </details>
     </main>
   );
 }

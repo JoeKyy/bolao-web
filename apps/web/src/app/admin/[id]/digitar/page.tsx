@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
-import { Aviso, Bolinha, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
+import { Aviso, NaoEncontrado, Bolinha, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
 import { api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { useRecurso } from "@/lib/useRecurso";
 
@@ -25,6 +25,7 @@ export default function Digitar() {
   const [aviso, setAviso] = useState<{ erro?: string; ok?: string }>({});
 
   if (carregando || erro?.status === 401) return <Carregando />;
+  if (erro?.status === 404) return <NaoEncontrado />;
   if (erro || !r) return <main className="mx-auto max-w-md px-4 py-10"><ErroDeCarga mensagem={erro?.message ?? "Erro"} tentar={recarregar} /></main>;
 
   const dono = new Map(r.participantes.map((p) => [p.id, p]));
