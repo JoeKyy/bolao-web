@@ -41,7 +41,7 @@ function Perfil({ rotulo, dica, marcado, desabilitado, onChange }: { rotulo: str
   );
 }
 
-const DICA_ADMIN = "Gerencia as contas e os perfis. Não vê os bolões dos outros.";
+const DICA_ADMIN = "Gerencia as contas e os perfis. Não tem acesso direto aos bolões dos outros, e tudo o que fizer sobre uma conta fica registrado para a pessoa ver.";
 const DICA_TESOUREIRO = "Cria e administra os próprios bolões: Pix, convites, pagamentos, exportação e registro dos jogos.";
 
 /** Página Usuários (como no gestor): perfis por pessoa. Só o perfil Administrador chega aqui. */

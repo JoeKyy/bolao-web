@@ -1,5 +1,5 @@
 "use client";
-import type { BolaoNaLista, Eu, ParticipacaoDTO } from "@bolao/shared";
+import type { AtividadeContaDTO, BolaoNaLista, Eu, ParticipacaoDTO } from "@bolao/shared";
 import { formatBRL } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,6 +7,7 @@ import { useState, type FormEvent } from "react";
 import { Aviso, BotaoCopiar, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { entrarComSenha } from "@/lib/loginCripto";
+import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 
 function Login({ aoEntrar }: { aoEntrar: () => void }) {
@@ -64,6 +65,29 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
   );
 }
 
+/** Últimas ações sobre a conta: quem gerou link, mudou perfis, trocou a senha (BAUD-02). */
+function AtividadeDaConta() {
+  const { dados } = useRecurso<AtividadeContaDTO[]>("/auth/atividade");
+  if (!dados || dados.length === 0) return null;
+  return (
+    <div className="mt-4 space-y-2 border-t border-line pt-4">
+      <h3 className="text-sm font-semibold">Atividade da conta</h3>
+      <p className="text-xs text-muted">Se alguma linha não foi você nem alguém que você conhece, avise o administrador e troque a senha.</p>
+      <ul className="space-y-1.5 text-sm">
+        {dados.map((a) => (
+          <li key={a.id}>
+            {a.descricao}
+            <span className="block text-xs text-muted">
+              {formatarDataHora(a.criadoEm)}
+              {a.por ? ` · por ${a.por}` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /** Códigos de recuperação (como no gestor): gerados com a senha atual, mostrados uma vez. */
 function CodigosRecuperacao() {
   const { dados, recarregar } = useRecurso<{ restantes: number }>("/auth/codigos");
@@ -118,6 +142,7 @@ function PainelTesoureiro() {
   const { dados, erro, carregando, recarregar } = useRecurso<BolaoNaLista[]>("/boloes");
   const [nome, setNome] = useState("Mega da Virada 2026");
   const [tipo, setTipo] = useState<"VIRADA" | "NORMAL">("VIRADA");
+  const [dataSorteio, setDataSorteio] = useState("");
   const [falha, setFalha] = useState<string | null>(null);
 
   if (carregando) return <Carregando />;
@@ -126,7 +151,9 @@ function PainelTesoureiro() {
   async function criar(e: FormEvent) {
     e.preventDefault();
     try {
-      const { id } = await api.post<{ id: number }>("/boloes", { nome, tipo });
+      // Horário de Brasília (-03:00), como a Caixa divulga.
+      const data = tipo === "NORMAL" && dataSorteio ? new Date(`${dataSorteio}:00-03:00`).toISOString() : undefined;
+      const { id } = await api.post<{ id: number }>("/boloes", { nome, tipo, ...(data ? { dataSorteio: data } : {}) });
       router.push(`/admin/${id}`);
     } catch (err) {
       setFalha(mensagemDe(err));
@@ -158,6 +185,15 @@ function PainelTesoureiro() {
             <input type="radio" name="tipo" checked={tipo === "NORMAL"} onChange={() => setTipo("NORMAL")} /> Concurso normal
           </label>
         </fieldset>
+        {tipo === "NORMAL" && (
+          <div>
+            <label htmlFor="data-sorteio" className="label">
+              Data e hora do sorteio (Brasília)
+            </label>
+            <input id="data-sorteio" type="datetime-local" required className="input" value={dataSorteio} onChange={(e) => setDataSorteio(e.target.value)} />
+            <p className="mt-1 text-xs text-muted">Depois desse horário o bolão não aceita mais inscrições nem jogos.</p>
+          </div>
+        )}
         <button type="submit" className="btn">
           Criar bolão
         </button>
@@ -300,6 +336,7 @@ export default function Admin() {
         </form>
         <p className="mt-2 text-xs text-muted">Trocar a senha encerra as sessões em todos os aparelhos.</p>
         <CodigosRecuperacao />
+        <AtividadeDaConta />
       </details>
     </main>
   );

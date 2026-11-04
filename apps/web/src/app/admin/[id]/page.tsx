@@ -221,7 +221,8 @@ function Resultado({ r, base, avisar, recarregar }: { r: ResumoAdmin; base: stri
   async function buscar() {
     setBuscando(true);
     try {
-      const c = await api.post<ConcursoCaixa>(`${base}/resultado/caixa`, concurso ? { concurso: Number(concurso) } : {});
+      const c = await comConfirmacao((q) => api.post<ConcursoCaixa>(`${base}/resultado/caixa${q}`, concurso ? { concurso: Number(concurso) } : {}));
+      if (!c) return;
       avisar({ ok: `Resultado do concurso ${c.numero} (${c.data}) importado da Caixa.` });
       await recarregar();
     } catch (e) {
@@ -237,7 +238,8 @@ function Resultado({ r, base, avisar, recarregar }: { r: ResumoAdmin; base: stri
     const premios = { sena: parseReais(sena || "0"), quina: parseReais(quina || "0"), quadra: parseReais(quadra || "0") };
     if (premios.sena === null || premios.quina === null || premios.quadra === null) return avisar({ erro: "Valor de prêmio inválido." });
     try {
-      await api.post(`${base}/resultado`, { dezenas: d.dezenas, premios });
+      const feito = await comConfirmacao((q) => api.post(`${base}/resultado${q}`, { dezenas: d.dezenas, premios }).then(() => true));
+      if (!feito) return;
       avisar({ ok: "Resultado registrado e inscrições encerradas." });
       await recarregar();
     } catch (err) {
@@ -268,7 +270,7 @@ function Resultado({ r, base, avisar, recarregar }: { r: ResumoAdmin; base: stri
           onClick={async () => {
             if (!window.confirm("Remover o resultado? O rateio some até registrar de novo.")) return;
             try {
-              await api.del(`${base}/resultado`);
+              await comConfirmacao((q) => api.del(`${base}/resultado${q}`));
               await recarregar();
             } catch (e) {
               avisar({ erro: mensagemDe(e) });

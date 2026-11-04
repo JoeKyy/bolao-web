@@ -186,6 +186,7 @@ export default function PainelBolao() {
       {!temResultado && (
         <Secao titulo="Quanto eu ganho?" id="calc">
           <Calculadora
+            virada={b.tipo === "VIRADA"}
             estimativa={b.estimativaPremio}
             meuPeso={eu ? Math.min(eu.pago, eu.devido) : 0}
             pesoSimulado={eu?.devido}
