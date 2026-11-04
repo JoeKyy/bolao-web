@@ -1,10 +1,10 @@
 "use client";
-import type { BolaoNaLista, Eu } from "@bolao/shared";
+import type { BolaoNaLista, Eu, ParticipacaoDTO } from "@bolao/shared";
 import { formatBRL } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Aviso, BotaoCopiar, Carregando, ErroDeCarga } from "@/components/ui";
+import { Aviso, BotaoCopiar, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { entrarComSenha } from "@/lib/loginCripto";
 import { useRecurso } from "@/lib/useRecurso";
@@ -112,19 +112,16 @@ function CodigosRecuperacao() {
   );
 }
 
-export default function Admin() {
+/** Parte do tesoureiro: criar e listar os próprios bolões. Só é montada para quem tem o perfil. */
+function PainelTesoureiro() {
   const router = useRouter();
   const { dados, erro, carregando, recarregar } = useRecurso<BolaoNaLista[]>("/boloes");
-  const eu = useRecurso<Eu>("/auth/eu");
-  const [senhaAtual, setSenhaAtual] = useState("");
-  const [senhaNova, setSenhaNova] = useState("");
   const [nome, setNome] = useState("Mega da Virada 2026");
   const [tipo, setTipo] = useState<"VIRADA" | "NORMAL">("VIRADA");
   const [falha, setFalha] = useState<string | null>(null);
 
   if (carregando) return <Carregando />;
-  if (erro?.status === 401) return <Login aoEntrar={() => void Promise.all([recarregar(), eu.recarregar()])} />;
-  if (erro) return <main className="mx-auto max-w-2xl px-4 py-10"><ErroDeCarga mensagem={erro.message} tentar={recarregar} /></main>;
+  if (erro) return <ErroDeCarga mensagem={erro.message} tentar={recarregar} />;
 
   async function criar(e: FormEvent) {
     e.preventDefault();
@@ -135,44 +132,16 @@ export default function Admin() {
       setFalha(mensagemDe(err));
     }
   }
-  async function sair() {
-    await api.post("/auth/sair").catch(() => undefined);
-    await Promise.all([recarregar(), eu.recarregar()]);
-  }
-  async function trocarSenha(e: FormEvent) {
-    e.preventDefault();
-    try {
-      await api.post("/auth/senha", { atual: senhaAtual, nova: senhaNova });
-      setSenhaAtual("");
-      setSenhaNova("");
-      await recarregar(); // a troca encerra todas as sessões: volta para o login
-    } catch (err) {
-      setFalha(mensagemDe(err));
-    }
-  }
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand">Organizador{eu.dados?.nome ? ` · ${eu.dados.nome}` : ""}</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Seus bolões</h1>
-          <p className="mt-1 text-sm text-muted">Você é o tesoureiro: o Pix, os convites, os pagamentos e o registro dos jogos são só seus.</p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <button type="button" className="btn-ghost" onClick={sair}>
-            Sair
-          </button>
-          {eu.dados?.papel === "ADMIN" && (
-            <Link href="/admin/organizadores" className="text-sm font-semibold text-brand underline">
-              Organizadores
-            </Link>
-          )}
-        </div>
-      </header>
+    <>
+      <section className="space-y-1">
+        <h2 className="text-xl font-bold tracking-tight">Bolões que eu administro</h2>
+        <p className="text-sm text-muted">Você é o tesoureiro deles: o Pix, os convites, os pagamentos e o registro dos jogos são só seus.</p>
+      </section>
 
       <form onSubmit={criar} className="card space-y-3">
-        <h2 className="text-lg font-semibold">Novo bolão</h2>
+        <h3 className="text-lg font-semibold">Novo bolão</h3>
         <Aviso erro={falha} />
         <div>
           <label htmlFor="nome" className="label">
@@ -220,9 +189,108 @@ export default function Admin() {
           </li>
         ))}
       </ul>
+    </>
+  );
+}
+
+/** "Meus bolões": tudo de que a conta participa, para qualquer perfil. */
+function MeusBoloes() {
+  const { dados, erro, carregando, recarregar } = useRecurso<ParticipacaoDTO[]>("/participacoes");
+  if (carregando) return <Carregando />;
+  if (erro) return <ErroDeCarga mensagem={erro.message} tentar={recarregar} />;
+  return (
+    <>
+      <section className="space-y-1">
+        <h2 className="text-xl font-bold tracking-tight">Bolões de que eu participo</h2>
+        <p className="text-sm text-muted">Para entrar num bolão novo, abra o link de convite que o tesoureiro mandou, já logado.</p>
+      </section>
+      {dados && dados.length === 0 && <p className="text-center text-sm text-muted">Você ainda não participa de nenhum bolão com esta conta.</p>}
+      <ul className="space-y-3">
+        {dados?.map((b) => (
+          <li key={b.convite}>
+            <Link href={`/b/${b.convite}`} className="card block transition hover:border-brand/40">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="break-words font-semibold">{b.nome}</h3>
+                  <p className="text-sm text-muted">
+                    {b.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
+                    {b.concurso ? ` · concurso ${b.concurso}` : ""} · {b.jogos} jogo(s)
+                  </p>
+                </div>
+                <SeloSituacao situacao={b.situacao} />
+              </div>
+              <p className="mt-2 text-sm text-muted">
+                Devido {formatBRL(b.devido)} · pago {formatBRL(b.pago)}
+                {b.temResultado && b.parte !== null && b.parte > 0 ? ` · sua parte ${formatBRL(b.parte)}` : ""}
+              </p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+export default function Admin() {
+  const eu = useRecurso<Eu>("/auth/eu");
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [senhaNova, setSenhaNova] = useState("");
+  const [falha, setFalha] = useState<string | null>(null);
+
+  if (eu.carregando) return <Carregando />;
+  if (eu.erro?.status === 401) return <Login aoEntrar={() => void eu.recarregar()} />;
+  if (eu.erro || !eu.dados) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-10">
+        <ErroDeCarga mensagem={eu.erro?.message ?? "Erro"} tentar={eu.recarregar} />
+      </main>
+    );
+  }
+  const conta = eu.dados;
+
+  async function sair() {
+    await api.post("/auth/sair").catch(() => undefined);
+    await eu.recarregar();
+  }
+  async function trocarSenha(e: FormEvent) {
+    e.preventDefault();
+    try {
+      await api.post("/auth/senha", { atual: senhaAtual, nova: senhaNova });
+      setSenhaAtual("");
+      setSenhaNova("");
+      await eu.recarregar(); // a troca encerra todas as sessões: volta para o login
+    } catch (err) {
+      setFalha(mensagemDe(err));
+    }
+  }
+  const perfis = [conta.admin && "Administrador", conta.tesoureiro && "Tesoureiro"].filter(Boolean).join(" e ");
+
+  return (
+    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-brand">{conta.nome || conta.email}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Bolão da Mega</h1>
+          <p className="mt-1 text-sm text-muted">{perfis ? `Perfil: ${perfis}.` : "Pessoa comum: você participa de bolões."}</p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <button type="button" className="btn-ghost" onClick={sair}>
+            Sair
+          </button>
+          {conta.admin && (
+            <Link href="/admin/usuarios" className="text-sm font-semibold text-brand underline">
+              Usuários
+            </Link>
+          )}
+        </div>
+      </header>
+
+      {conta.tesoureiro && <PainelTesoureiro />}
+      <MeusBoloes />
 
       <details className="card">
         <summary className="cursor-pointer font-semibold">Minha conta</summary>
+        <Aviso erro={falha} />
         <form onSubmit={trocarSenha} className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
           <input aria-label="Senha atual" type="password" required autoComplete="current-password" placeholder="Senha atual" className="input" value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} />
           <input aria-label="Nova senha" type="password" required minLength={12} autoComplete="new-password" placeholder="Nova senha (12+)" className="input" value={senhaNova} onChange={(e) => setSenhaNova(e.target.value)} />
