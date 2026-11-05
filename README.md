@@ -69,7 +69,6 @@ Três tipos de pessoa usam o front, e cada uma tem o seu caminho:
 ```
 bolao-web/
 ├── README.md                     Este arquivo
-├── HANDOFF-SEGURANCA.md          Padrão de segurança e achados de auditoria
 ├── Dockerfile                    Imagem do front (multi-stage; recebe NEXT_PUBLIC_API_URL no build)
 ├── docker-compose.yml            Container web (network_mode host, 256 MB, healthcheck)
 ├── package.json, pnpm-*.yaml     Raiz do workspace e scripts
@@ -193,7 +192,7 @@ Telas que usam o padrão completo: login, novo bolão, recuperar senha (as duas 
 
 ## 8. Segurança
 
-O padrão seguido está em [`HANDOFF-SEGURANCA.md`](HANDOFF-SEGURANCA.md). Do lado do front:
+O modelo de segurança segue o padrão descrito abaixo. Do lado do front:
 
 - **CSP e cabeçalhos** (`next.config.ts`): `default-src 'self'`, `connect-src` só para o próprio site e a origem da API, `frame-ancestors 'none'` (sem iframe), `object-src 'none'`, `form-action 'self'`, `base-uri 'self'`; `X-Powered-By` desligado. O `script-src` ainda precisa de `'unsafe-inline'` (o Next injeta scripts para hidratar); a política estrita com nonce está nas pendências.
 - **Build seguro**: o build de produção **falha** se `NEXT_PUBLIC_API_URL` não estiver definida, em vez de apontar para `localhost` em silêncio.
@@ -295,6 +294,6 @@ Segredos e variáveis por ambiente: `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `DEP
 
 ## 15. Documentos relacionados
 
-- [`HANDOFF-SEGURANCA.md`](HANDOFF-SEGURANCA.md): padrão de segurança e achados corrigidos.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md) e [`LICENSE`](LICENSE) (MIT): contribuição, relato de vulnerabilidades e licença.
 - [`deploy/README.md`](deploy/README.md): publicação do front.
 - API: [`JoeKyy/back-bolao`](https://github.com/JoeKyy/back-bolao), que concentra a referência de rotas, o modelo de dados e a operação da VPS.
