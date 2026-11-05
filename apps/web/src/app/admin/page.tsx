@@ -4,19 +4,22 @@ import { formatBRL } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Aviso, BotaoCopiar, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
+import { Aviso, BotaoCopiar, Campo, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { entrarComSenha } from "@/lib/loginCripto";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
+import { useValidacao } from "@/lib/validacao";
 
 function Login({ aoEntrar }: { aoEntrar: () => void }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  async function entrar(e: FormEvent) {
+  const v = useValidacao();
+  async function entrar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!v.validar(e)) return;
     setEnviando(true);
     setErro(null);
     try {
@@ -35,20 +38,14 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Área do organizador</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">Entrar</h1>
       </div>
-      <Aviso erro={erro} />
-      <form onSubmit={entrar} className="card flex flex-col gap-3">
-        <div>
-          <label htmlFor="email" className="label">
-            E-mail
-          </label>
-          <input id="email" type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div>
-          <label htmlFor="senha" className="label">
-            Senha
-          </label>
-          <input id="senha" type="password" required autoComplete="current-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
-        </div>
+      <Aviso erro={erro ?? v.resumo} />
+      <form onSubmit={entrar} noValidate className="card flex flex-col gap-3">
+        <Campo id="email" rotulo="E-mail" erro={v.erros.email} limpar={v.limpar}>
+          <input type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </Campo>
+        <Campo id="senha" rotulo="Senha" erro={v.erros.senha} limpar={v.limpar}>
+          <input type="password" required autoComplete="current-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+        </Campo>
         <button type="submit" className="btn" disabled={enviando}>
           {enviando ? "Entrando…" : "Entrar"}
         </button>
@@ -144,19 +141,22 @@ function PainelTesoureiro() {
   const [tipo, setTipo] = useState<"VIRADA" | "NORMAL">("VIRADA");
   const [dataSorteio, setDataSorteio] = useState("");
   const [falha, setFalha] = useState<string | null>(null);
+  const v = useValidacao();
 
   if (carregando) return <Carregando />;
   if (erro) return <ErroDeCarga mensagem={erro.message} tentar={recarregar} />;
 
-  async function criar(e: FormEvent) {
+  async function criar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setFalha(null);
+    if (!v.validar(e)) return;
     try {
       // Horário de Brasília (-03:00), como a Caixa divulga.
       const data = tipo === "NORMAL" && dataSorteio ? new Date(`${dataSorteio}:00-03:00`).toISOString() : undefined;
       const { id } = await api.post<{ id: number }>("/boloes", { nome, tipo, ...(data ? { dataSorteio: data } : {}) });
       router.push(`/admin/${id}`);
     } catch (err) {
-      setFalha(mensagemDe(err));
+      if (!v.doServidor(err, { nome: "nome", dataSorteio: "data-sorteio" })) setFalha(mensagemDe(err));
     }
   }
 
@@ -167,15 +167,12 @@ function PainelTesoureiro() {
         <p className="text-sm text-muted">Você é o tesoureiro deles: o Pix, os convites, os pagamentos e o registro dos jogos são só seus.</p>
       </section>
 
-      <form onSubmit={criar} className="card space-y-3">
+      <form onSubmit={criar} noValidate className="card space-y-3">
         <h3 className="text-lg font-semibold">Novo bolão</h3>
-        <Aviso erro={falha} />
-        <div>
-          <label htmlFor="nome" className="label">
-            Nome do grupo
-          </label>
-          <input id="nome" required minLength={2} maxLength={80} className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
-        </div>
+        <Aviso erro={falha ?? v.resumo} />
+        <Campo id="nome" rotulo="Nome do grupo" erro={v.erros.nome} dica="De 2 a 80 caracteres. Os participantes veem este nome." limpar={v.limpar}>
+          <input required minLength={2} maxLength={80} className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
+        </Campo>
         <fieldset className="flex flex-wrap gap-4 text-sm">
           <legend className="label">Tipo</legend>
           <label className="flex items-center gap-2">
@@ -186,13 +183,9 @@ function PainelTesoureiro() {
           </label>
         </fieldset>
         {tipo === "NORMAL" && (
-          <div>
-            <label htmlFor="data-sorteio" className="label">
-              Data e hora do sorteio (Brasília)
-            </label>
-            <input id="data-sorteio" type="datetime-local" required className="input" value={dataSorteio} onChange={(e) => setDataSorteio(e.target.value)} />
-            <p className="mt-1 text-xs text-muted">Depois desse horário o bolão não aceita mais inscrições nem jogos.</p>
-          </div>
+          <Campo id="data-sorteio" rotulo="Data e hora do sorteio (Brasília)" erro={v.erros["data-sorteio"]} dica="Depois desse horário o bolão não aceita mais inscrições nem jogos." limpar={v.limpar}>
+            <input type="datetime-local" required className="input" value={dataSorteio} onChange={(e) => setDataSorteio(e.target.value)} />
+          </Campo>
         )}
         <button type="submit" className="btn">
           Criar bolão
