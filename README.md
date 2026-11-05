@@ -295,6 +295,7 @@ Segredos e variáveis por ambiente: `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `DEP
 
 ## 15. Documentos relacionados
 
+- [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md) e [`LICENSE`](LICENSE) (MIT): contribuição, relato de vulnerabilidades e licença.
 - [`HANDOFF-SEGURANCA.md`](HANDOFF-SEGURANCA.md): padrão de segurança e achados corrigidos.
 - [`deploy/README.md`](deploy/README.md): publicação do front.
 - API: [`JoeKyy/back-bolao`](https://github.com/JoeKyy/back-bolao), que concentra a referência de rotas, o modelo de dados e a operação da VPS.
