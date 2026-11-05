@@ -1,24 +1,29 @@
 "use client";
-import type { BolaoNaLista } from "@bolao/shared";
+import type { AtividadeContaDTO, BolaoNaLista, Eu, ParticipacaoDTO } from "@bolao/shared";
 import { formatBRL } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Aviso, Carregando, ErroDeCarga } from "@/components/ui";
+import { Aviso, BotaoCopiar, Campo, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
+import { entrarComSenha } from "@/lib/loginCripto";
+import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
+import { useValidacao } from "@/lib/validacao";
 
 function Login({ aoEntrar }: { aoEntrar: () => void }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  async function entrar(e: FormEvent) {
+  const v = useValidacao();
+  async function entrar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!v.validar(e)) return;
     setEnviando(true);
     setErro(null);
     try {
-      await api.post("/auth/entrar", { email, senha });
+      await entrarComSenha(email, senha);
       aoEntrar();
     } catch (err) {
       setErro(mensagemDe(err));
@@ -33,77 +38,141 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Área do organizador</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">Entrar</h1>
       </div>
-      <Aviso erro={erro} />
-      <form onSubmit={entrar} className="card flex flex-col gap-3">
-        <div>
-          <label htmlFor="email" className="label">
-            E-mail
-          </label>
-          <input id="email" type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div>
-          <label htmlFor="senha" className="label">
-            Senha
-          </label>
-          <input id="senha" type="password" required autoComplete="current-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
-        </div>
+      <Aviso erro={erro ?? v.resumo} />
+      <form onSubmit={entrar} noValidate className="card flex flex-col gap-3">
+        <Campo id="email" rotulo="E-mail" erro={v.erros.email} limpar={v.limpar}>
+          <input type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </Campo>
+        <Campo id="senha" rotulo="Senha" erro={v.erros.senha} limpar={v.limpar}>
+          <input type="password" required autoComplete="current-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+        </Campo>
         <button type="submit" className="btn" disabled={enviando}>
           {enviando ? "Entrando…" : "Entrar"}
         </button>
       </form>
-      <Link href="/" className="text-sm text-muted underline">
-        Voltar
-      </Link>
+      <div className="flex justify-between text-sm">
+        <Link href="/recuperar" className="font-semibold text-brand underline">
+          Esqueci minha senha
+        </Link>
+        <Link href="/" className="text-muted underline">
+          Voltar
+        </Link>
+      </div>
     </main>
   );
 }
 
-export default function Admin() {
+/** Últimas ações sobre a conta: quem gerou link, mudou perfis, trocou a senha (BAUD-02). */
+function AtividadeDaConta() {
+  const { dados } = useRecurso<AtividadeContaDTO[]>("/auth/atividade");
+  if (!dados || dados.length === 0) return null;
+  return (
+    <div className="mt-4 space-y-2 border-t border-line pt-4">
+      <h3 className="text-sm font-semibold">Atividade da conta</h3>
+      <p className="text-xs text-muted">Se alguma linha não foi você nem alguém que você conhece, avise o administrador e troque a senha.</p>
+      <ul className="space-y-1.5 text-sm">
+        {dados.map((a) => (
+          <li key={a.id}>
+            {a.descricao}
+            <span className="block text-xs text-muted">
+              {formatarDataHora(a.criadoEm)}
+              {a.por ? ` · por ${a.por}` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Códigos de recuperação (como no gestor): gerados com a senha atual, mostrados uma vez. */
+function CodigosRecuperacao() {
+  const { dados, recarregar } = useRecurso<{ restantes: number }>("/auth/codigos");
+  const [senha, setSenha] = useState("");
+  const [codigos, setCodigos] = useState<string[] | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  async function gerar(e: FormEvent) {
+    e.preventDefault();
+    if (dados?.restantes && !window.confirm("Gerar códigos novos? Os que você guardou antes deixam de valer.")) return;
+    try {
+      const r = await api.post<{ codigos: string[] }>("/auth/codigos", { senha });
+      setCodigos(r.codigos);
+      setSenha("");
+      setErro(null);
+      await recarregar();
+    } catch (err) {
+      setErro(mensagemDe(err));
+    }
+  }
+  return (
+    <div className="mt-4 space-y-2 border-t border-line pt-4">
+      <h3 className="text-sm font-semibold">Códigos de recuperação</h3>
+      <p className="text-xs text-muted">
+        Servem para trocar a senha se você esquecer, sem depender de e-mail nem do administrador. Você tem {dados?.restantes ?? 0} código(s) válido(s).
+      </p>
+      <Aviso erro={erro} />
+      {codigos ? (
+        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <p className="text-sm font-semibold text-amber-900">Guarde estes códigos agora. Eles não aparecem de novo.</p>
+          <ul className="grid grid-cols-2 gap-1 font-mono text-sm">
+            {codigos.map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
+          <BotaoCopiar texto={codigos.join("\n")} rotulo="Copiar códigos" />
+        </div>
+      ) : (
+        <form onSubmit={gerar} className="flex gap-2">
+          <input aria-label="Senha atual para gerar códigos" type="password" required autoComplete="current-password" placeholder="Senha atual" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+          <button type="submit" className="btn-ghost shrink-0">
+            Gerar códigos
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+/** Parte do tesoureiro: criar e listar os próprios bolões. Só é montada para quem tem o perfil. */
+function PainelTesoureiro() {
   const router = useRouter();
   const { dados, erro, carregando, recarregar } = useRecurso<BolaoNaLista[]>("/boloes");
   const [nome, setNome] = useState("Mega da Virada 2026");
   const [tipo, setTipo] = useState<"VIRADA" | "NORMAL">("VIRADA");
+  const [dataSorteio, setDataSorteio] = useState("");
   const [falha, setFalha] = useState<string | null>(null);
+  const v = useValidacao();
 
   if (carregando) return <Carregando />;
-  if (erro?.status === 401) return <Login aoEntrar={recarregar} />;
-  if (erro) return <main className="mx-auto max-w-2xl px-4 py-10"><ErroDeCarga mensagem={erro.message} tentar={recarregar} /></main>;
+  if (erro) return <ErroDeCarga mensagem={erro.message} tentar={recarregar} />;
 
-  async function criar(e: FormEvent) {
+  async function criar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setFalha(null);
+    if (!v.validar(e)) return;
     try {
-      const { id } = await api.post<{ id: number }>("/boloes", { nome, tipo });
+      // Horário de Brasília (-03:00), como a Caixa divulga.
+      const data = tipo === "NORMAL" && dataSorteio ? new Date(`${dataSorteio}:00-03:00`).toISOString() : undefined;
+      const { id } = await api.post<{ id: number }>("/boloes", { nome, tipo, ...(data ? { dataSorteio: data } : {}) });
       router.push(`/admin/${id}`);
     } catch (err) {
-      setFalha(mensagemDe(err));
+      if (!v.doServidor(err, { nome: "nome", dataSorteio: "data-sorteio" })) setFalha(mensagemDe(err));
     }
-  }
-  async function sair() {
-    await api.post("/auth/sair").catch(() => undefined);
-    await recarregar();
   }
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand">Organizador</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Seus bolões</h1>
-        </div>
-        <button type="button" className="btn-ghost" onClick={sair}>
-          Sair
-        </button>
-      </header>
+    <>
+      <section className="space-y-1">
+        <h2 className="text-xl font-bold tracking-tight">Bolões que eu administro</h2>
+        <p className="text-sm text-muted">Você é o tesoureiro deles: o Pix, os convites, os pagamentos e o registro dos jogos são só seus.</p>
+      </section>
 
-      <form onSubmit={criar} className="card space-y-3">
-        <h2 className="text-lg font-semibold">Novo bolão</h2>
-        <Aviso erro={falha} />
-        <div>
-          <label htmlFor="nome" className="label">
-            Nome do grupo
-          </label>
-          <input id="nome" required minLength={2} maxLength={80} className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
-        </div>
+      <form onSubmit={criar} noValidate className="card space-y-3">
+        <h3 className="text-lg font-semibold">Novo bolão</h3>
+        <Aviso erro={falha ?? v.resumo} />
+        <Campo id="nome" rotulo="Nome do grupo" erro={v.erros.nome} dica="De 2 a 80 caracteres. Os participantes veem este nome." limpar={v.limpar}>
+          <input required minLength={2} maxLength={80} className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
+        </Campo>
         <fieldset className="flex flex-wrap gap-4 text-sm">
           <legend className="label">Tipo</legend>
           <label className="flex items-center gap-2">
@@ -113,6 +182,11 @@ export default function Admin() {
             <input type="radio" name="tipo" checked={tipo === "NORMAL"} onChange={() => setTipo("NORMAL")} /> Concurso normal
           </label>
         </fieldset>
+        {tipo === "NORMAL" && (
+          <Campo id="data-sorteio" rotulo="Data e hora do sorteio (Brasília)" erro={v.erros["data-sorteio"]} dica="Depois desse horário o bolão não aceita mais inscrições nem jogos." limpar={v.limpar}>
+            <input type="datetime-local" required className="input" value={dataSorteio} onChange={(e) => setDataSorteio(e.target.value)} />
+          </Campo>
+        )}
         <button type="submit" className="btn">
           Criar bolão
         </button>
@@ -144,6 +218,119 @@ export default function Admin() {
           </li>
         ))}
       </ul>
+    </>
+  );
+}
+
+/** "Meus bolões": tudo de que a conta participa, para qualquer perfil. */
+function MeusBoloes() {
+  const { dados, erro, carregando, recarregar } = useRecurso<ParticipacaoDTO[]>("/participacoes");
+  if (carregando) return <Carregando />;
+  if (erro) return <ErroDeCarga mensagem={erro.message} tentar={recarregar} />;
+  return (
+    <>
+      <section className="space-y-1">
+        <h2 className="text-xl font-bold tracking-tight">Bolões de que eu participo</h2>
+        <p className="text-sm text-muted">Para entrar num bolão novo, abra o link de convite que o tesoureiro mandou, já logado.</p>
+      </section>
+      {dados && dados.length === 0 && <p className="text-center text-sm text-muted">Você ainda não participa de nenhum bolão com esta conta.</p>}
+      <ul className="space-y-3">
+        {dados?.map((b) => (
+          <li key={b.convite}>
+            <Link href={`/b/${b.convite}`} className="card block transition hover:border-brand/40">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="break-words font-semibold">{b.nome}</h3>
+                  <p className="text-sm text-muted">
+                    {b.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
+                    {b.concurso ? ` · concurso ${b.concurso}` : ""} · {b.jogos} jogo(s)
+                  </p>
+                </div>
+                <SeloSituacao situacao={b.situacao} />
+              </div>
+              <p className="mt-2 text-sm text-muted">
+                Devido {formatBRL(b.devido)} · pago {formatBRL(b.pago)}
+                {b.temResultado && b.parte !== null && b.parte > 0 ? ` · sua parte ${formatBRL(b.parte)}` : ""}
+              </p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+export default function Admin() {
+  const eu = useRecurso<Eu>("/auth/eu");
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [senhaNova, setSenhaNova] = useState("");
+  const [falha, setFalha] = useState<string | null>(null);
+
+  if (eu.carregando) return <Carregando />;
+  if (eu.erro?.status === 401) return <Login aoEntrar={() => void eu.recarregar()} />;
+  if (eu.erro || !eu.dados) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-10">
+        <ErroDeCarga mensagem={eu.erro?.message ?? "Erro"} tentar={eu.recarregar} />
+      </main>
+    );
+  }
+  const conta = eu.dados;
+
+  async function sair() {
+    await api.post("/auth/sair").catch(() => undefined);
+    await eu.recarregar();
+  }
+  async function trocarSenha(e: FormEvent) {
+    e.preventDefault();
+    try {
+      await api.post("/auth/senha", { atual: senhaAtual, nova: senhaNova });
+      setSenhaAtual("");
+      setSenhaNova("");
+      await eu.recarregar(); // a troca encerra todas as sessões: volta para o login
+    } catch (err) {
+      setFalha(mensagemDe(err));
+    }
+  }
+  const perfis = [conta.admin && "Administrador", conta.tesoureiro && "Tesoureiro"].filter(Boolean).join(" e ");
+
+  return (
+    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-brand">{conta.nome || conta.email}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Bolão da Mega</h1>
+          <p className="mt-1 text-sm text-muted">{perfis ? `Perfil: ${perfis}.` : "Pessoa comum: você participa de bolões."}</p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <button type="button" className="btn-ghost" onClick={sair}>
+            Sair
+          </button>
+          {conta.admin && (
+            <Link href="/admin/usuarios" className="text-sm font-semibold text-brand underline">
+              Usuários
+            </Link>
+          )}
+        </div>
+      </header>
+
+      {conta.tesoureiro && <PainelTesoureiro />}
+      <MeusBoloes />
+
+      <details className="card">
+        <summary className="cursor-pointer font-semibold">Minha conta</summary>
+        <Aviso erro={falha} />
+        <form onSubmit={trocarSenha} className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          <input aria-label="Senha atual" type="password" required autoComplete="current-password" placeholder="Senha atual" className="input" value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} />
+          <input aria-label="Nova senha" type="password" required minLength={12} maxLength={128} autoComplete="new-password" placeholder="Nova senha (12+)" className="input" value={senhaNova} onChange={(e) => setSenhaNova(e.target.value)} />
+          <button type="submit" className="btn-ghost">
+            Trocar senha
+          </button>
+        </form>
+        <p className="mt-2 text-xs text-muted">Trocar a senha encerra as sessões em todos os aparelhos.</p>
+        <CodigosRecuperacao />
+        <AtividadeDaConta />
+      </details>
     </main>
   );
 }

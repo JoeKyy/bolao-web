@@ -1,0 +1,170 @@
+name: Deploy
+
+# Economia (a VPS tem pouco disco e memória): só publica o que mexe no código. Documentação e
+# modelos de .env não disparam nada. Promova em LOTE (vários commits no dev, um PR para homolog).
+on:
+  # Produção só por disparo manual na main, com a frase de confirmação (o plano gratuito do
+  # GitHub não oferece aprovação obrigatória em repositório privado). Homologação publica sozinha.
+  workflow_dispatch:
+    inputs:
+      confirmar:
+        description: 'Para publicar em PRODUÇÃO (branch main), digite: publicar producao'
+        required: false
+        default: ''
+  push:
+    branches: [main, homolog, dev]
+    paths-ignore: ["**/*.md", "deploy/env.*.example"]
+  pull_request:
+    branches: [main, homolog, dev]
+    paths-ignore: ["**/*.md", "deploy/env.*.example"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/dev' || github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Lint, tipos, testes, build e audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm contrato:conferir
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm audit --prod --audit-level=high
+      - name: Build de produção (URL fictícia, só para compilar)
+        env:
+          NEXT_PUBLIC_API_URL: https://api.exemplo.invalid
+        run: pnpm build
+
+  imagem:
+    name: Construir a imagem Docker (só em PR para homolog ou main)
+    if: github.event_name == 'pull_request' && (github.base_ref == 'homolog' || github.base_ref == 'main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --build-arg NEXT_PUBLIC_API_URL=https://api.exemplo.invalid -t bolao-web:ci .
+
+  guarda:
+    name: Origem do commit
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Conferir se veio pela esteira
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA="${{ github.sha }}"
+          if ! RESPOSTA=$(gh api "repos/${{ github.repository }}/commits/$SHA/pulls" 2>&1); then
+            echo "::error::Não consegui consultar a origem do commit $SHA: $RESPOSTA"
+            exit 1
+          fi
+          ORIGEM=$(echo "$RESPOSTA" | jq -r '.[] | select(.base.ref=="main") | .head.ref' | head -1)
+          echo "commit $SHA veio de: ${ORIGEM:-(nenhum pull request)}"
+          if [ -z "$ORIGEM" ]; then
+            echo "::error::Este commit entrou direto na main, sem pull request."
+            exit 1
+          fi
+          case "$ORIGEM" in
+            homolog|hotfix/*) echo "ok." ;;
+            *) echo "::error::O pull request veio de '$ORIGEM', que não é homolog nem hotfix/*."; exit 1 ;;
+          esac
+
+  deploy:
+    name: Publicar na VPS
+    needs: [verify, guarda]
+    # Homologação: push na branch homolog. Produção: disparo manual na main com a frase certa
+    # (e só se a origem do commit passou pela guarda).
+    if: |
+      always() && needs.verify.result == 'success' && true
+      && (
+        (github.event_name == 'push' && github.ref == 'refs/heads/homolog')
+        || (
+          github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+          && inputs.confirmar == 'publicar producao' && needs.guarda.result == 'success'
+        )
+      )
+    runs-on: ubuntu-latest
+    # Produção: disparo manual com confirmação (ver `on.workflow_dispatch`).
+    environment: ${{ github.ref == 'refs/heads/main' && 'producao' || 'homologacao' }}
+    env:
+      AMBIENTE: ${{ github.ref == 'refs/heads/main' && 'producao' || 'homolog' }}
+      URL_API: ${{ vars.URL_API }}
+      URL_FRONT: ${{ vars.URL_FRONT }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # A API compatível precisa estar publicada ANTES do front: o contrato dos dois tem de bater.
+      - name: Conferir contrato de tipos com a API publicada
+        run: |
+          LOCAL=$(jq -S -c . packages/shared/src/contrato.json)
+          REMOTO=$(curl -s -m 15 "$URL_API/saude/contrato" | jq -S -c . || true)
+          echo "local:  $LOCAL"
+          echo "remoto: $REMOTO"
+          if [ "$LOCAL" != "$REMOTO" ]; then
+            echo "::error::O contrato da API publicada difere do deste front. Publique a API compatível antes (ou atualize os arquivos compartilhados)."
+            exit 1
+          fi
+
+      - name: Preparar SSH (chave do deploy e host fixado)
+        env:
+          CHAVE: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$CHAVE" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<CFG
+          Host vps
+            HostName ${{ secrets.DEPLOY_HOST }}
+            Port ${{ secrets.DEPLOY_PORT }}
+            User deploy
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          CFG
+
+      - name: Este commit já está no ar?
+        id: estado
+        run: |
+          ATUAL=$(ssh vps "estado $AMBIENTE web" | awk '/^atual:/ {print $2}')
+          echo "no ar: ${ATUAL:-nenhum}"
+          if [ "$ATUAL" = "${{ github.sha }}" ]; then echo "ja=1" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Construir a imagem (com a URL da API deste ambiente)
+        if: steps.estado.outputs.ja != '1'
+        run: docker build --build-arg NEXT_PUBLIC_API_URL="$URL_API" -t bolao-web:${{ github.sha }} .
+
+      - name: Enviar a imagem e o compose para a VPS
+        if: steps.estado.outputs.ja != '1'
+        run: |
+          docker save bolao-web:${{ github.sha }} | gzip | ssh vps "carregar-imagem $AMBIENTE web ${{ github.sha }}"
+          ssh vps "atualizar-compose $AMBIENTE web" < docker-compose.yml
+
+      - name: Implantar (sobe, confere a saúde e volta para a anterior se falhar)
+        if: steps.estado.outputs.ja != '1'
+        run: ssh vps "implantar $AMBIENTE web ${{ github.sha }}"
+
+      - name: Verificar saúde pelo endereço público
+        run: |
+          for i in $(seq 1 18); do
+            CODE=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$URL_FRONT/" || true)
+            echo "tentativa $i: HTTP $CODE"
+            if [ "$CODE" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "::error::O front não respondeu com saúde em 3 minutos depois do deploy."
+          exit 1

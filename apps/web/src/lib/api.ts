@@ -8,6 +8,8 @@ export class ErroDaApi extends Error {
     public readonly status: number,
     public readonly codigo: string,
     mensagem: string,
+    /** Motivo por campo, quando a API recusa a validação (`entrada_invalida`). */
+    public readonly campos?: Record<string, string>,
   ) {
     super(mensagem);
   }
@@ -35,7 +37,7 @@ async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Prom
   const dados: unknown = texto ? JSON.parse(texto) : undefined;
   if (!r.ok) {
     const e = dados as Partial<ErroApi> | undefined;
-    throw new ErroDaApi(r.status, e?.codigo ?? "erro", typeof e?.mensagem === "string" ? e.mensagem : "Não foi possível concluir.");
+    throw new ErroDaApi(r.status, e?.codigo ?? "erro", typeof e?.mensagem === "string" ? e.mensagem : "Não foi possível concluir.", e?.campos);
   }
   return dados as T;
 }
@@ -47,4 +49,48 @@ export const api = {
   del: <T = void>(c: string) => chamar<T>("DELETE", c),
 };
 
-export const mensagemDe = (e: unknown) => (e instanceof ErroDaApi ? e.message : "Algo deu errado. Tente de novo.");
+/** Nome do campo da API como o usuário o conhece. */
+export const ROTULOS: Record<string, string> = {
+  nome: "Nome",
+  email: "E-mail",
+  senha: "Senha",
+  senhaNova: "Nova senha",
+  senhaAtual: "Senha atual",
+  whatsapp: "WhatsApp",
+  dataSorteio: "Data do sorteio",
+  concurso: "Concurso",
+  precoSimples: "Preço da aposta simples",
+  maxDezenasParticipante: "Máximo de dezenas por participante",
+  maxParticipantes: "Máximo de participantes",
+  instrucoes: "Instruções",
+  pixChave: "Chave Pix",
+  pixNome: "Nome do recebedor do Pix",
+  pixCidade: "Cidade do Pix",
+  dezenas: "Dezenas",
+  codigo: "Código",
+  tipo: "Tipo",
+};
+
+/** Texto do aviso: com `campos`, diz qual campo e por quê ("Nome: use pelo menos 2 caracteres."). */
+export const mensagemDe = (e: unknown) => {
+  if (!(e instanceof ErroDaApi)) return "Algo deu errado. Tente de novo.";
+  const linhas = Object.entries(e.campos ?? {}).map(([k, m]) => (k === "_" ? m : `${ROTULOS[k] ?? "Campo"}: ${m}`));
+  return linhas.length ? linhas.join(" ") : e.message;
+};
+
+/**
+ * Bolão travado (sorteio passou ou resultado lançado): a API recusa com `bolao_travado` o que
+ * mexe no rateio. Aqui o organizador confirma e a chamada é repetida com `?confirmar=1`.
+ * Devolve undefined se ele desistir.
+ */
+export async function comConfirmacao<T>(fazer: (sufixo: string) => Promise<T>): Promise<T | undefined> {
+  try {
+    return await fazer("");
+  } catch (e) {
+    if (e instanceof ErroDaApi && e.codigo === "bolao_travado") {
+      if (!window.confirm(`${e.message}\n\nContinuar?`)) return undefined;
+      return await fazer("?confirmar=1");
+    }
+    throw e;
+  }
+}

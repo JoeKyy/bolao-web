@@ -1,6 +1,7 @@
 "use client";
 import { formatDezena } from "@bolao/shared";
-import { useState, type ReactNode } from "react";
+import Link from "next/link";
+import { cloneElement, useState, type ChangeEvent, type ReactElement, type ReactNode } from "react";
 
 export function Aviso({ erro, ok }: { erro?: string | null; ok?: string | null }) {
   if (!erro && !ok) return null;
@@ -12,6 +13,62 @@ export function Aviso({ erro, ok }: { erro?: string | null; ok?: string | null }
       }`}
     >
       {erro ?? ok}
+    </div>
+  );
+}
+
+type Controle = ReactElement<{ className?: string; required?: boolean; onChange?: (e: ChangeEvent<never>) => void }>;
+
+/**
+ * Rótulo + controle + dica + motivo do erro, ligados por aria (leitor de tela anuncia o erro).
+ * O controle recebe `id`, `aria-invalid` e borda vermelha quando há erro, que some ao digitar.
+ */
+export function Campo({
+  id,
+  rotulo,
+  erro,
+  dica,
+  limpar,
+  children,
+}: {
+  id: string;
+  rotulo: string;
+  erro?: string;
+  dica?: string;
+  limpar?: (id: string) => void;
+  children: Controle;
+}) {
+  const filho = cloneElement(children, {
+    id,
+    "aria-invalid": erro ? true : undefined,
+    "aria-describedby": [erro ? `${id}-erro` : "", dica ? `${id}-dica` : ""].filter(Boolean).join(" ") || undefined,
+    className: `${children.props.className ?? "input"}${erro ? " input-erro" : ""}`,
+    onChange: (e: ChangeEvent<never>) => {
+      children.props.onChange?.(e);
+      if (erro) limpar?.(id);
+    },
+  } as object);
+  return (
+    <div>
+      <label htmlFor={id} className="label">
+        {rotulo}
+        {children.props.required && (
+          <span aria-hidden="true" className="ml-0.5 text-red-700">
+            *
+          </span>
+        )}
+      </label>
+      {filho}
+      {dica && !erro && (
+        <p id={`${id}-dica`} className="mt-1 text-xs text-muted">
+          {dica}
+        </p>
+      )}
+      {erro && (
+        <p id={`${id}-erro`} role="alert" className="mt-1 text-xs font-semibold text-red-700">
+          {erro}
+        </p>
+      )}
     </div>
   );
 }
@@ -105,5 +162,17 @@ export function Numero({ rotulo, valor }: { rotulo: string; valor: string }) {
       <p className="text-xs text-muted">{rotulo}</p>
       <p className="mt-0.5 text-base font-bold tabular-nums sm:text-lg">{valor}</p>
     </div>
+  );
+}
+
+/** Bolão de outro organizador ou inexistente: mesma resposta, sem revelar qual. */
+export function NaoEncontrado() {
+  return (
+    <main className="mx-auto max-w-md space-y-4 px-4 py-10 text-center">
+      <p className="text-sm text-muted">Bolão não encontrado. Ele não existe ou não é um dos seus.</p>
+      <Link href="/admin" className="btn-ghost">
+        Ver meus bolões
+      </Link>
+    </main>
   );
 }

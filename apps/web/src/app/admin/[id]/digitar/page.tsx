@@ -2,10 +2,11 @@
 import type { ResumoAdmin } from "@bolao/shared";
 import { formatBRL } from "@bolao/shared";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useState } from "react";
-import { Aviso, Bolinha, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
-import { api, mensagemDe } from "@/lib/api";
+import { useParams, useRouter } from "next/navigation";
+
+import { useEffect, useState } from "react";
+import { Aviso, NaoEncontrado, Bolinha, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
+import { api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { useRecurso } from "@/lib/useRecurso";
 
 /** Um jogo por tela, com dezenas grandes, para digitar no app Loterias Caixa e marcar como registrado. */
@@ -13,12 +14,18 @@ export default function Digitar() {
   const { id } = useParams<{ id: string }>();
   const base = `/boloes/${encodeURIComponent(id)}`;
   const { dados: r, erro, carregando, recarregar } = useRecurso<ResumoAdmin>(base);
+  const router = useRouter();
+  // Só o organizador (tesoureiro) chega aqui: sem sessão, vai para o login.
+  useEffect(() => {
+    if (erro?.status === 401) router.replace("/admin");
+  }, [erro, router]);
   const [i, setI] = useState(0);
   const [soPendentes, setSoPendentes] = useState(true);
   const [comprovante, setComprovante] = useState("");
   const [aviso, setAviso] = useState<{ erro?: string; ok?: string }>({});
 
-  if (carregando) return <Carregando />;
+  if (carregando || erro?.status === 401) return <Carregando />;
+  if (erro?.status === 404) return <NaoEncontrado />;
   if (erro || !r) return <main className="mx-auto max-w-md px-4 py-10"><ErroDeCarga mensagem={erro?.message ?? "Erro"} tentar={recarregar} /></main>;
 
   const dono = new Map(r.participantes.map((p) => [p.id, p]));
@@ -32,7 +39,8 @@ export default function Digitar() {
   async function marcar(registrado: boolean) {
     if (!atual) return;
     try {
-      await api.post(`${base}/jogos/${atual.id}/registro`, { registrado, comprovante: comprovante || null });
+      const feito = await comConfirmacao((q) => api.post(`${base}/jogos/${atual.id}/registro${q}`, { registrado, comprovante: comprovante || null }).then(() => true));
+      if (!feito) return;
       setComprovante("");
       setAviso({ ok: registrado ? "Registrado. Próximo jogo." : "Registro desfeito." });
       if (!soPendentes) setI((x) => Math.min(x + 1, fila.length - 1));
