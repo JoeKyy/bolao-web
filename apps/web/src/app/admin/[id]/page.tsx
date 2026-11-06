@@ -1,5 +1,5 @@
 "use client";
-import type { ConcursoCaixa, EventoDTO, JogoAdminDTO, ParticipanteAdminDTO, ResumoAdmin } from "@bolao/shared";
+import type { AcessoEmitido, ConcursoCaixa, EventoDTO, JogoAdminDTO, ParticipanteAdminDTO, ResumoAdmin } from "@bolao/shared";
 import { formatBRL, parseDezenas, parseReais } from "@bolao/shared";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -41,6 +41,7 @@ function Participante({
   const [nome, setNome] = useState(p.nome);
   const [whatsapp, setWhatsapp] = useState(p.whatsapp);
   const [valorTxt, setValorTxt] = useState("");
+  const [linkAcesso, setLinkAcesso] = useState<string | null>(null);
   const faz = async (fn: () => Promise<unknown>, ok: string) => {
     try {
       await fn();
@@ -96,6 +97,46 @@ function Participante({
             </button>
           </form>
         </div>
+
+        {!p.temConta && (
+          <div className="space-y-2 rounded-controle bg-surface-2 p-4">
+            <p className="font-medium">Perdeu o acesso?</p>
+            <p className="legenda">
+              Se {p.nome.split(" ")[0]} limpou o navegador ou trocou de celular e não guardou o bolão numa conta, gere um link de acesso e mande pelo WhatsApp. Vale 7 dias e só funciona uma vez.
+            </p>
+            {linkAcesso ? (
+              <div className="space-y-2">
+                <p className="break-all rounded-controle bg-card p-3 font-mono text-caption">{linkAcesso}</p>
+                <div className="flex flex-wrap gap-2">
+                  <BotaoCopiar texto={linkAcesso} rotulo="Copiar link" classe="btn btn-sm" />
+                  <a
+                    className="btn-ghost btn-sm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href={`https://wa.me/${p.whatsapp.replace(/\D/g, "") ? p.whatsapp.replace(/\D/g, "").replace(/^(?!55)/, "55") : ""}?text=${encodeURIComponent(`Oi ${p.nome.split(" ")[0]}, este é o seu link para voltar ao bolão (vale 7 dias, uso único): ${linkAcesso}`)}`}
+                  >
+                    Enviar pelo WhatsApp
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="btn-ghost btn-sm"
+                onClick={async () => {
+                  try {
+                    const r = await api.post<AcessoEmitido>(`${base}/participantes/${p.id}/acesso`);
+                    setLinkAcesso(`${window.location.origin}/acesso/${r.token}`);
+                  } catch (e) {
+                    avisar({ erro: mensagemDe(e) });
+                  }
+                }}
+              >
+                Gerar link de acesso
+              </button>
+            )}
+          </div>
+        )}
 
         {p.whatsapp && (
           <a className="text-sm font-semibold text-brand underline" href={`https://wa.me/${p.whatsapp.replace(/\D/g, "").replace(/^(?!55)/, "55")}`} target="_blank" rel="noopener noreferrer">
