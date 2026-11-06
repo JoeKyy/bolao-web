@@ -10,6 +10,9 @@ import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
 import { Casca } from "@/components/Casca";
+import { chaveEnvio, chaveErro } from "@/components/GuardarConta";
+import { EMAIL_PATTERN } from "@/lib/contato";
+import { WHATSAPP_DICA, WHATSAPP_PATTERN, formatarWhatsapp } from "@/lib/contato";
 
 export default function Entrar() {
   const { token } = useParams<{ token: string }>();
@@ -18,6 +21,10 @@ export default function Entrar() {
   const eu = useRecurso<Eu>("/auth/eu"); // 401 = não está logado; segue pelo link, sem conta
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirma, setConfirma] = useState("");
+  const [modo, setModo] = useState<"conta" | "nome">("conta");
   const [falha, setFalha] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const v = useValidacao();
@@ -31,9 +38,24 @@ export default function Entrar() {
     e.preventDefault();
     setFalha(null);
     if (!v.validar(e)) return;
+    if (!logado && modo === "conta" && senha !== confirma) return v.marcar("confirma", "As senhas não conferem. Digite a mesma senha nos dois campos.");
     setEnviando(true);
     try {
       await api.post(`/convites/${encodeURIComponent(token)}/inscricao`, logado ? { whatsapp } : { nome, whatsapp });
+      if (!logado && modo === "conta") {
+        // Já pede a conta (e-mail confirmado + a senha escolhida aqui). Se falhar, o motivo aparece no
+        // cartão da tela do bolão, onde a pessoa tenta de novo sem perder a entrada.
+        try {
+          await api.post(`/convites/${encodeURIComponent(token)}/conta`, { email, senha });
+          sessionStorage.setItem(chaveEnvio(token), email);
+        } catch (err) {
+          try {
+            sessionStorage.setItem(chaveErro(token), mensagemDe(err));
+          } catch {
+            /* sem armazenamento */
+          }
+        }
+      }
       router.replace(`/b/${encodeURIComponent(token)}`);
     } catch (err) {
       if (!v.doServidor(err, { nome: "nome", whatsapp: "whatsapp" })) setFalha(mensagemDe(err));
@@ -69,24 +91,62 @@ export default function Entrar() {
                 </p>
               ) : (
                 <>
+                  <div role="group" aria-label="Como você quer entrar" className="grid grid-cols-2 gap-1 rounded-full bg-surface-2 p-1">
+                    {(
+                      [
+                        ["conta", "Criar conta"],
+                        ["nome", "Só com meu nome"],
+                      ] as const
+                    ).map(([m, rotulo]) => (
+                      <button
+                        key={m}
+                        type="button"
+                        aria-pressed={modo === m}
+                        onClick={() => setModo(m)}
+                        className={`min-h-11 rounded-full px-3 text-body font-semibold transition-colors ${modo === m ? "bg-card text-foreground shadow-card" : "text-muted hover:text-foreground"}`}
+                      >
+                        {rotulo}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-body text-muted">
+                    {modo === "conta"
+                      ? "Com conta você entra pelo celular, computador ou outro aparelho e não perde seus jogos nem o Pix se limpar o navegador."
+                      : "Seu acesso fica só neste aparelho. Você pode criar a conta depois, dentro do bolão."}
+                  </p>
                   <Campo id="nome" rotulo="Seu nome" erro={v.erros.nome} limpar={v.limpar}>
                     <input required minLength={2} maxLength={60} autoComplete="name" className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
                   </Campo>
-                  <p className="text-xs text-muted">
-                    Tem conta?{" "}
-                    <Link href="/admin" className="font-semibold text-brand underline">
-                      Entre primeiro
-                    </Link>{" "}
-                    para ver este bolão em qualquer aparelho.
-                  </p>
+                  {modo === "conta" && (
+                    <>
+                      <Campo id="email" rotulo="E-mail" erro={v.erros.email} dica="Enviamos um link para confirmar que o e-mail é seu." limpar={v.limpar}>
+                        <input type="email" required pattern={EMAIL_PATTERN} maxLength={120} autoComplete="email" inputMode="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+                      </Campo>
+                      <Campo id="senha" rotulo="Senha (12 a 128 caracteres)" erro={v.erros.senha} dica="Evite senhas comuns e o seu nome ou e-mail. Uma frase com palavras soltas funciona bem." limpar={v.limpar}>
+                        <input type="password" required minLength={12} maxLength={128} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+                      </Campo>
+                      <Campo id="confirma" rotulo="Repita a senha" erro={v.erros.confirma} limpar={v.limpar}>
+                        <input type="password" required autoComplete="new-password" className="input" value={confirma} onChange={(e) => setConfirma(e.target.value)} />
+                      </Campo>
+                    </>
+                  )}
                 </>
               )}
               <Campo id="whatsapp" rotulo="WhatsApp (opcional)" erro={v.erros.whatsapp} dica="Só o organizador vê. Usado para avisos do bolão; seus dados são apagados quando o bolão acabar." limpar={v.limpar}>
-                <input type="tel" maxLength={30} autoComplete="tel" placeholder="(11) 90000-0000" className="input" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+                <input type="tel" inputMode="tel" pattern={WHATSAPP_PATTERN} title={WHATSAPP_DICA} maxLength={30} autoComplete="tel" placeholder="(11) 91234-5678" className="input" value={whatsapp} onChange={(e) => setWhatsapp(formatarWhatsapp(e.target.value))} />
               </Campo>
               <button type="submit" className="btn w-full" disabled={enviando} aria-busy={enviando}>
-                {enviando ? "Entrando…" : "Entrar no bolão"}
+                {enviando ? "Entrando…" : !logado && modo === "conta" ? "Criar conta e entrar no bolão" : "Entrar no bolão"}
               </button>
+              {!logado && (
+                <p className="legenda">
+                  Já tem conta?{" "}
+                  <Link href="/admin" className="font-semibold text-brand underline">
+                    Entre primeiro
+                  </Link>
+                  . Entrou antes e perdeu o acesso? Peça ao organizador um link de acesso.
+                </p>
+              )}
             </form>
           )}
         </>

@@ -12,6 +12,7 @@ import { ErroDaApi, api, mensagemDe } from "@/lib/api";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { Casca } from "@/components/Casca";
+import { GuardarConta } from "@/components/GuardarConta";
 
 const FAIXA = { sena: "Sena", quina: "Quina", quadra: "Quadra" } as const;
 
@@ -95,16 +96,7 @@ export default function PainelBolao() {
 
       <Toast aviso={aviso} />
 
-      {p.acesso === "aparelho" && (
-        <div className="nao-imprimir space-y-2 rounded-xl border border-line bg-card p-3 text-sm">
-          <p>
-            Você está vendo este bolão só neste aparelho. Entre na sua conta e guarde o bolão nela para ver em qualquer lugar.
-          </p>
-          <button type="button" className="btn-ghost" onClick={guardarNaConta}>
-            Guardar na minha conta
-          </button>
-        </div>
-      )}
+      {p.acesso === "aparelho" && <GuardarConta convite={token} aoTerConta={guardarNaConta} />}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
       <aside className="space-y-6 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1">
       {eu && (
