@@ -488,7 +488,7 @@ export default function GestaoBolao() {
   const aRegistrar = r.jogos.filter((j) => !j.registrado && r.participantes.find((p) => p.id === j.participanteId)?.situacao === "quitado").length;
 
   return (
-    <Casca largura="larga">
+    <Casca largura="larga" menu>
       <Link href="/admin" className="text-sm font-semibold text-brand">
         ← Todos os bolões
       </Link>
