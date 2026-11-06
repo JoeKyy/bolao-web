@@ -9,7 +9,7 @@ export function Aviso({ erro, ok }: { erro?: string | null; ok?: string | null }
     <div
       role={erro ? "alert" : "status"}
       className={`rounded-xl border px-4 py-3 text-sm font-medium ${
-        erro ? "border-red-200 bg-red-50 text-red-800" : "border-brand/30 bg-brand-soft text-brand-dark"
+        erro ? "border-danger-line bg-danger-soft text-danger-fg" : "border-brand/30 bg-brand-soft text-brand-dark"
       }`}
     >
       {erro ?? ok}
@@ -53,7 +53,7 @@ export function Campo({
       <label htmlFor={id} className="label">
         {rotulo}
         {children.props.required && (
-          <span aria-hidden="true" className="ml-0.5 text-red-700">
+          <span aria-hidden="true" className="ml-0.5 text-danger-fg">
             *
           </span>
         )}
@@ -65,7 +65,7 @@ export function Campo({
         </p>
       )}
       {erro && (
-        <p id={`${id}-erro`} role="alert" className="mt-1 text-xs font-semibold text-red-700">
+        <p id={`${id}-erro`} role="alert" className="mt-1 text-xs font-semibold text-danger-fg">
           {erro}
         </p>
       )}
@@ -80,7 +80,7 @@ export function Carregando() {
 export function ErroDeCarga({ mensagem, tentar }: { mensagem: string; tentar: () => void }) {
   return (
     <div className="card space-y-3 text-center">
-      <p className="text-sm text-red-800">{mensagem}</p>
+      <p className="text-sm text-danger-fg">{mensagem}</p>
       <button type="button" className="btn-ghost" onClick={tentar}>
         Tentar de novo
       </button>
@@ -93,7 +93,7 @@ export function Bolinha({ n, acerto = false, tamanho = "md" }: { n: number; acer
   return (
     <span
       className={`inline-flex ${dim} items-center justify-center rounded-full font-semibold tabular-nums ${
-        acerto ? "bg-brand text-white ring-2 ring-brand/30" : "border border-line bg-white text-foreground"
+        acerto ? "bg-brand text-brand-fg ring-2 ring-brand/30" : "border border-line bg-card text-foreground"
       }`}
       aria-label={acerto ? `${n}, acerto` : String(n)}
     >
@@ -146,9 +146,9 @@ export function Secao({ titulo, children, acao, id }: { titulo: string; children
 }
 
 const ESTILO_SITUACAO = {
-  quitado: "bg-brand-soft text-brand-dark",
-  parcial: "bg-amber-100 text-amber-800",
-  pendente: "bg-amber-100 text-amber-800",
+  quitado: "chip-success",
+  parcial: "chip-warning",
+  pendente: "chip-warning",
 } as const;
 const TEXTO_SITUACAO = { quitado: "Pago", parcial: "Pagou parte", pendente: "Pendente" } as const;
 

@@ -13,23 +13,23 @@ export function PixCard({ pix }: { pix: PixCobranca }) {
       .catch(() => setQr(null));
   }, [pix.copiaECola]);
   return (
-    <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-      <p className="text-sm text-amber-900">
+    <div className="space-y-3 rounded-xl border border-warning-line bg-warning-soft p-4">
+      <p className="text-sm text-warning-fg">
         Pague <strong>{formatBRL(pix.valor)}</strong> por Pix. O código já vai com o valor e o identificador{" "}
         <strong className="font-mono">{pix.identificador}</strong>, que ajuda o organizador a achar o seu pagamento.
       </p>
       <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
         {qr && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={qr} alt="QR Code do Pix" width={160} height={160} className="rounded-lg border border-amber-200 bg-white" />
+          <img src={qr} alt="QR Code do Pix" width={160} height={160} className="rounded-lg border border-warning-line bg-white" />
         )}
         <div className="w-full min-w-0 space-y-2">
-          <p className="label !text-amber-900">Pix copia e cola</p>
-          <p className="break-all rounded-lg bg-white p-2 font-mono text-xs">{pix.copiaECola}</p>
+          <p className="label !text-warning-fg">Pix copia e cola</p>
+          <p className="break-all rounded-lg bg-card p-2 font-mono text-xs">{pix.copiaECola}</p>
           <BotaoCopiar texto={pix.copiaECola} rotulo="Copiar código Pix" />
         </div>
       </div>
-      <p className="text-xs text-amber-900/80">Depois de pagar, o organizador confirma aqui. Não há confirmação automática.</p>
+      <p className="text-xs text-warning-fg">Depois de pagar, o organizador confirma aqui. Não há confirmação automática.</p>
     </div>
   );
 }

@@ -46,7 +46,7 @@ export default function Imprimir() {
   const total = jogos.reduce((s, j) => s + j.preco, 0);
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 bg-white px-4 py-6 text-black">
+    <main className="mx-auto max-w-3xl tema-claro space-y-4 bg-white px-4 py-6 text-black">
       <div className="nao-imprimir flex flex-wrap items-center justify-between gap-3">
         <Link href={`/admin/${id}`} className="text-sm font-semibold text-brand">
           ← Voltar

@@ -76,7 +76,7 @@ export default function PainelBolao() {
   return (
     <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
       {p.visaoOrganizador && (
-        <div className="nao-imprimir flex items-center justify-between gap-3 rounded-xl bg-foreground px-4 py-2 text-sm text-white">
+        <div className="nao-imprimir flex items-center justify-between gap-3 rounded-xl bg-foreground px-4 py-2 text-sm text-background">
           <span>Você está vendo como participante.</span>
           <Link className="underline" href={`/admin/${b.id}`}>
             Voltar à gestão
@@ -95,7 +95,7 @@ export default function PainelBolao() {
       <Aviso erro={aviso.erro} ok={aviso.ok} />
 
       {p.acesso === "aparelho" && (
-        <div className="nao-imprimir space-y-2 rounded-xl border border-line bg-white p-3 text-sm">
+        <div className="nao-imprimir space-y-2 rounded-xl border border-line bg-card p-3 text-sm">
           <p>
             Você está vendo este bolão só neste aparelho. Entre na sua conta e guarde o bolão nela para ver em qualquer lugar.
           </p>
@@ -119,7 +119,7 @@ export default function PainelBolao() {
           </div>
           {p.pix && <PixCard pix={p.pix} />}
           {!p.pix && eu.devido > eu.pago && (
-            <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+            <p className="rounded-xl bg-warning-soft p-3 text-sm text-warning-fg">
               Falta pagar <strong>{formatBRL(eu.devido - eu.pago)}</strong>. {b.instrucoes || "Combine o pagamento com o organizador."}
             </p>
           )}
@@ -165,7 +165,7 @@ export default function PainelBolao() {
                   </p>
                 </div>
                 {b.inscricoesAbertas && !j.registrado && (
-                  <button type="button" className="text-xs font-semibold text-red-700" onClick={() => remover(j.id)}>
+                  <button type="button" className="text-xs font-semibold text-danger-fg" onClick={() => remover(j.id)}>
                     Remover
                   </button>
                 )}

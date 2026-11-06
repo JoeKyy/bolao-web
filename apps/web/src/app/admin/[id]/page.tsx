@@ -114,7 +114,7 @@ function Participante({
                 </p>
               </div>
               {!j.registrado && (
-                <button type="button" className="text-xs font-semibold text-red-700" onClick={() => window.confirm("Remover este jogo?") && faz(() => comConfirmacao((q) => api.del(`${base}/jogos/${j.id}${q}`)), "Jogo removido.")}>
+                <button type="button" className="text-xs font-semibold text-danger-fg" onClick={() => window.confirm("Remover este jogo?") && faz(() => comConfirmacao((q) => api.del(`${base}/jogos/${j.id}${q}`)), "Jogo removido.")}>
                   Remover
                 </button>
               )}
@@ -459,7 +459,7 @@ export default function GestaoBolao() {
       </header>
       <Aviso erro={aviso.erro} ok={aviso.ok} />
       {b.travado && (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <p className="rounded-xl border border-warning-line bg-warning-soft p-3 text-sm text-warning-fg">
           {b.resultado ? "Resultado lançado." : "O horário do sorteio já passou."} Inscrições e jogos novos estão fechados, e qualquer mudança que mexa no rateio pede
           confirmação e fica no histórico. Só jogos registrados na Caixa entram no rateio.
         </p>
@@ -484,7 +484,7 @@ export default function GestaoBolao() {
           </Link>
         </div>
         <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
-          <span className={`chip ${b.inscricoesAbertas ? "bg-brand-soft text-brand-dark" : "bg-amber-100 text-amber-800"}`}>
+          <span className={`chip ${b.inscricoesAbertas ? "bg-brand-soft text-brand-dark" : "bg-warning-soft text-warning-fg"}`}>
             Inscrições {b.inscricoesAbertas ? "abertas" : "encerradas"}
           </span>
           {(b.inscricoesAbertas || !b.travado) && (
@@ -500,7 +500,7 @@ export default function GestaoBolao() {
             Gerar novo link
           </button>
         </div>
-        {!b.pix && <p className="text-xs text-amber-800">Configure a chave Pix (em Configurações) para os participantes pagarem com QR Code.</p>}
+        {!b.pix && <p className="text-xs text-warning-fg">Configure a chave Pix (em Configurações) para os participantes pagarem com QR Code.</p>}
       </Secao>
 
       <Secao titulo="Participantes e pagamentos" id="participantes">
@@ -550,7 +550,7 @@ export default function GestaoBolao() {
       <Historico base={base} />
 
       <details className="card">
-        <summary className="cursor-pointer text-lg font-semibold text-red-700">Excluir bolão</summary>
+        <summary className="cursor-pointer text-lg font-semibold text-danger-fg">Excluir bolão</summary>
         <form
           className="mt-3 space-y-2"
           onSubmit={(e) => {
