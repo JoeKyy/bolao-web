@@ -18,7 +18,7 @@ function LinkGerado({ titulo, convite, nome }: { titulo: string; convite: Convit
       <p className="text-sm font-semibold text-brand-dark">
         {titulo}: link para {nome}
       </p>
-      <p className="break-all rounded-lg bg-white p-2 font-mono text-xs">{link}</p>
+      <p className="break-all rounded-lg bg-card p-2 font-mono text-xs">{link}</p>
       <div className="flex flex-wrap gap-2">
         <BotaoCopiar texto={link} rotulo="Copiar link" />
         <a className="btn-ghost" href={`https://wa.me/?text=${encodeURIComponent(msg)}`} target="_blank" rel="noopener noreferrer">
@@ -165,8 +165,8 @@ export default function Usuarios() {
                   <p className="font-medium">
                     {u.nome || u.email}
                     {sou && <span className="ml-2 text-xs text-muted">(você)</span>}
-                    {!u.ativo && <span className="chip ml-2 bg-red-100 text-red-800">desativado</span>}
-                    {u.ativo && u.pendente && <span className="chip ml-2 bg-amber-100 text-amber-800">convite pendente</span>}
+                    {!u.ativo && <span className="chip ml-2 bg-danger-soft text-danger-fg">desativado</span>}
+                    {u.ativo && u.pendente && <span className="chip ml-2 bg-warning-soft text-warning-fg">convite pendente</span>}
                   </p>
                   <p className="truncate text-xs text-muted">
                     {u.email} · {u.boloes} bolão(ões) como tesoureiro · participa de {u.participacoes} · desde {formatarDataHora(u.criadoEm).slice(0, 10)}

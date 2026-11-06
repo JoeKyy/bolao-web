@@ -112,8 +112,8 @@ function CodigosRecuperacao() {
       </p>
       <Aviso erro={erro} />
       {codigos ? (
-        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-          <p className="text-sm font-semibold text-amber-900">Guarde estes códigos agora. Eles não aparecem de novo.</p>
+        <div className="space-y-2 rounded-xl border border-warning-line bg-warning-soft p-3">
+          <p className="text-sm font-semibold text-warning-fg">Guarde estes códigos agora. Eles não aparecem de novo.</p>
           <ul className="grid grid-cols-2 gap-1 font-mono text-sm">
             {codigos.map((c) => (
               <li key={c}>{c}</li>
@@ -205,7 +205,7 @@ function PainelTesoureiro() {
                     {b.concurso ? ` · concurso ${b.concurso}` : ""}
                   </p>
                 </div>
-                <span className={`chip ${b.temResultado ? "bg-line text-foreground" : b.inscricoesAbertas ? "bg-brand-soft text-brand-dark" : "bg-amber-100 text-amber-800"}`}>
+                <span className={`chip ${b.temResultado ? "bg-line text-foreground" : b.inscricoesAbertas ? "bg-brand-soft text-brand-dark" : "bg-warning-soft text-warning-fg"}`}>
                   {b.temResultado ? "Conferido" : b.inscricoesAbertas ? "Inscrições abertas" : "Inscrições encerradas"}
                 </span>
               </div>

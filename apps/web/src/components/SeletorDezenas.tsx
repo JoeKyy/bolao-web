@@ -82,7 +82,7 @@ export function SeletorDezenas({ maxDezenas, precoSimples, onConfirmar, rotuloCo
               disabled={bloqueada}
               onClick={() => alternar(n)}
               className={`aspect-square rounded-lg text-xs font-semibold tabular-nums transition sm:text-sm ${
-                on ? "bg-brand text-white" : "border border-line bg-white hover:bg-brand-soft disabled:opacity-35"
+                on ? "bg-brand text-brand-fg" : "border border-line bg-card hover:bg-brand-soft disabled:opacity-35"
               }`}
             >
               {formatDezena(n)}
