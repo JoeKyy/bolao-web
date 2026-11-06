@@ -1,70 +1,349 @@
 @import "tailwindcss";
 
-:root {
-  --background: #f6f8f6;
-  --foreground: #14211a;
+/*
+ * Design system do Bolão da Mega.
+ * Tudo que tem cor ou medida vive aqui, como token. As telas usam só as classes semânticas
+ * (bg-card, text-muted, text-danger-fg, text-h2...) e nunca valores soltos, para o tema escuro
+ * e a escala tipográfica valerem em todo o app.
+ */
+
+/* Tema claro (padrão). `.tema-claro` força o claro em um trecho (ex.: impressão). */
+:root,
+.tema-claro {
+  color-scheme: light;
+  --background: #f9faf9;
+  --foreground: #101a14;
   --card: #ffffff;
-  --muted: #5b6b61;
-  --line: #dfe6e1;
-  --brand: #15803d;
-  --brand-dark: #166534;
-  --brand-soft: #e7f5ec;
-  --gold: #b7791f;
-  --gold-soft: #fdf3e1;
+  --surface-2: #f1f4f2;
+  --muted: #58685f;
+  --line: #e3e8e5;
+
+  --brand: #087a4f;
+  --brand-dark: #066443;
+  --brand-soft: #e1f4ea;
+  --brand-fg: #ffffff;
+  --gold: #8a5a0b;
+  --gold-soft: #fff3d1;
+
+  --success: #087a4f;
+  --success-soft: #e1f4ea;
+  --success-fg: #066443;
+  --success-line: #b7e0c4;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
+  --warning-fg: #92400e;
+  --warning-line: #fde68a;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --danger-fg: #b91c1c;
+  --danger-line: #fecaca;
+  --info: #2563eb;
+  --info-soft: #eff6ff;
+  --info-fg: #1d4ed8;
+  --info-line: #bfdbfe;
+
+  --sombra-sm: 0 1px 2px rgb(16 26 20 / 0.06), 0 2px 12px rgb(16 26 20 / 0.05);
+  --sombra-md: 0 8px 28px rgb(16 26 20 / 0.14);
+}
+
+/*
+ * Tema escuro. O usuário escolhe em "Sistema / Claro / Escuro" (atributo data-tema no <html>, ver
+ * components/AlternarTema.tsx). Sem escolha, segue o sistema. A impressão é sempre clara.
+ */
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    color-scheme: dark;
+    --background: #0b110e;
+    --foreground: #e8efe9;
+    --card: #131b16;
+    --surface-2: #1b2620;
+    --muted: #9db0a3;
+    --line: #26352c;
+
+    --brand: #3dd68c;
+    --brand-dark: #6ee7a8;
+    --brand-soft: #11291c;
+    --brand-fg: #04210f;
+    --gold: #fbbf24;
+    --gold-soft: #2a2210;
+
+    --success: #3dd68c;
+    --success-soft: #11291c;
+    --success-fg: #86efac;
+    --success-line: #1f5a33;
+    --warning: #f59e0b;
+    --warning-soft: #2b2008;
+    --warning-fg: #fcd34d;
+    --warning-line: #5c4410;
+    --danger: #ef4444;
+    --danger-soft: #2f1414;
+    --danger-fg: #fca5a5;
+    --danger-line: #5f2222;
+    --info: #3b82f6;
+    --info-soft: #112240;
+    --info-fg: #93c5fd;
+    --info-line: #1e3a8a;
+
+    --sombra-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --sombra-md: 0 4px 12px rgb(0 0 0 / 0.45);
+  }
+}
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+  --background: #0b110e;
+  --foreground: #e8efe9;
+  --card: #131b16;
+  --surface-2: #1b2620;
+  --muted: #9db0a3;
+  --line: #26352c;
+
+  --brand: #3dd68c;
+  --brand-dark: #6ee7a8;
+  --brand-soft: #11291c;
+  --brand-fg: #04210f;
+  --gold: #fbbf24;
+  --gold-soft: #2a2210;
+
+  --success: #3dd68c;
+  --success-soft: #11291c;
+  --success-fg: #86efac;
+  --success-line: #1f5a33;
+  --warning: #f59e0b;
+  --warning-soft: #2b2008;
+  --warning-fg: #fcd34d;
+  --warning-line: #5c4410;
+  --danger: #ef4444;
+  --danger-soft: #2f1414;
+  --danger-fg: #fca5a5;
+  --danger-line: #5f2222;
+  --info: #3b82f6;
+  --info-soft: #112240;
+  --info-fg: #93c5fd;
+  --info-line: #1e3a8a;
+
+  --sombra-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --sombra-md: 0 4px 12px rgb(0 0 0 / 0.45);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-surface-2: var(--surface-2);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-fg: var(--brand-fg);
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-fg: var(--success-fg);
+  --color-success-line: var(--success-line);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-fg: var(--warning-fg);
+  --color-warning-line: var(--warning-line);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-line: var(--danger-line);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-fg: var(--info-fg);
+  --color-info-line: var(--info-line);
+
+  --font-sans: var(--font-figtree), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --shadow-card: var(--sombra-sm);
+  --shadow-float: var(--sombra-md);
+
+  /* Escala tipográfica: tamanho / altura de linha. Usar sempre estes nomes. */
+  --text-display: 1.875rem;
+  --text-display--line-height: 2.25rem;
+  --text-display--letter-spacing: -0.02em;
+  --text-h1: 1.5rem;
+  --text-h1--line-height: 2rem;
+  --text-h1--letter-spacing: -0.015em;
+  --text-h2: 1.25rem;
+  --text-h2--line-height: 1.75rem;
+  --text-h3: 1rem;
+  --text-h3--line-height: 1.5rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.25rem;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+
+  /* Raios: controle, cartão, pílula. */
+  --radius-controle: 0.75rem;
+  --radius-cartao: 1.25rem;
+
+  --animate-pulsar: pulsar 1.6s ease-in-out infinite;
+  --animate-girar: girar 0.7s linear infinite;
+  --animate-entrar: entrar 0.18s ease-out;
+  @keyframes pulsar {
+    50% {
+      opacity: 0.45;
+    }
+  }
+  @keyframes girar {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes entrar {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  accent-color: var(--brand);
+}
+
+/* Telas largas: tudo que é rem (texto, espaço, larguras) cresce 12,5% para não parecer app de celular. */
+@media (min-width: 64rem) {
+  html {
+    font-size: 112.5%;
+  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+@media (min-width: 40rem) {
+  body {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+}
+
+/* Foco visível e único em tudo que é interativo. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-line bg-card p-4 shadow-sm sm:p-5;
+    @apply rounded-cartao border border-line bg-card p-5 shadow-card sm:p-7;
+  }
+
+  /* Botões: .btn (primário) + variantes. Tamanhos: .btn-sm e .btn-lg. */
+  .btn,
+  .btn-ghost,
+  .btn-gold,
+  .btn-danger {
+    @apply relative inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-2 text-body font-semibold transition motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress aria-busy:opacity-80;
   }
   .btn {
-    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50;
+    @apply bg-brand text-brand-fg shadow-card hover:bg-brand-dark;
   }
   .btn-ghost {
-    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50;
+    @apply border border-foreground/25 bg-card text-foreground hover:border-foreground hover:bg-surface-2;
   }
   .btn-gold {
-    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold-soft px-4 py-2 text-sm font-semibold text-gold transition hover:bg-gold/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold;
+    @apply border border-gold/40 bg-gold-soft text-gold hover:bg-gold/15;
   }
   .btn-danger {
-    @apply inline-flex min-h-10 items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50;
+    @apply border border-danger-line bg-card text-danger-fg hover:bg-danger-soft;
   }
+  .btn-sm {
+    @apply min-h-9 px-4 py-1.5 text-caption;
+  }
+  .btn-lg {
+    @apply min-h-14 px-8 text-h3;
+  }
+
   .input {
-    @apply min-h-10 w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20;
+    @apply min-h-12 w-full rounded-controle border border-foreground/25 bg-card px-4 py-2 text-body text-foreground outline-none placeholder:text-muted/70 focus:border-brand focus:ring-2 focus:ring-brand/25;
   }
   .input-erro {
-    @apply border-red-600 bg-red-50 focus:border-red-600 focus:ring-red-600/20;
+    @apply border-danger bg-danger-soft focus:border-danger focus:ring-danger/25;
   }
   .label {
-    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-muted;
+    @apply mb-1.5 block text-body font-medium text-foreground;
   }
+
   .chip {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-caption font-semibold;
+  }
+  .chip-success {
+    @apply bg-success-soft text-success-fg;
+  }
+  .chip-warning {
+    @apply bg-warning-soft text-warning-fg;
+  }
+  .chip-danger {
+    @apply bg-danger-soft text-danger-fg;
+  }
+  .chip-info {
+    @apply bg-info-soft text-info-fg;
+  }
+  .chip-neutral {
+    @apply bg-surface-2 text-muted;
+  }
+
+  /* Tipografia semântica para blocos de texto. */
+  .titulo-1 {
+    @apply text-h1 font-bold tracking-tight;
+  }
+  .titulo-2 {
+    @apply text-h2 font-semibold;
+  }
+  .titulo-3 {
+    @apply text-h3 font-semibold;
+  }
+  .legenda {
+    @apply text-caption text-muted;
+  }
+}
+
+/* Indicador de "enviando": qualquer botão com aria-busy mostra um spinner antes do texto. */
+.btn[aria-busy="true"]::before,
+.btn-ghost[aria-busy="true"]::before,
+.btn-gold[aria-busy="true"]::before,
+.btn-danger[aria-busy="true"]::before {
+  content: "";
+  width: 1em;
+  height: 1em;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: girar 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
 @media print {
-  .nao-imprimir { display: none !important; }
-  body { background: white; }
-  .quebra { break-inside: avoid; }
+  html {
+    font-size: 100%;
+  }
+  .nao-imprimir {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+  .quebra {
+    break-inside: avoid;
+  }
 }

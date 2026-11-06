@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { Casca } from "@/components/Casca";
 
 export default function Inicio() {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-5 py-10">
+    <Casca largura="estreita" centro>
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">Mega-Sena</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">Bolão da Mega</h1>
+        <p className="text-body font-semibold text-brand">Mega-Sena</p>
+        <h1 className="mt-1 text-display font-bold">Bolão da Mega</h1>
         <p className="mt-3 text-muted">
           Cada grupo tem o seu bolão: escolha seus jogos (ou peça uma surpresinha), pague por Pix e acompanhe a conferência e o rateio.
         </p>
@@ -17,6 +18,6 @@ export default function Inicio() {
       <Link href="/admin" className="btn-ghost self-start">
         Sou o organizador
       </Link>
-    </main>
+    </Casca>
   );
 }

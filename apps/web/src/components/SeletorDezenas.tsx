@@ -70,7 +70,7 @@ export function SeletorDezenas({ maxDezenas, precoSimples, onConfirmar, rotuloCo
         )}
       </div>
 
-      <div role="group" aria-label="Volante de 1 a 60" className="grid grid-cols-10 gap-1">
+      <div role="group" aria-label="Volante de 1 a 60" className="grid grid-cols-6 gap-2 sm:grid-cols-10">
         {Array.from({ length: MAX_NUMERO }, (_, i) => i + 1).map((n) => {
           const on = marcadas.includes(n);
           const bloqueada = !on && completo;
@@ -81,8 +81,8 @@ export function SeletorDezenas({ maxDezenas, precoSimples, onConfirmar, rotuloCo
               aria-pressed={on}
               disabled={bloqueada}
               onClick={() => alternar(n)}
-              className={`aspect-square rounded-lg text-xs font-semibold tabular-nums transition sm:text-sm ${
-                on ? "bg-brand text-white" : "border border-line bg-white hover:bg-brand-soft disabled:opacity-35"
+              className={`aspect-square min-h-11 rounded-controle text-h3 font-semibold tabular-nums transition-colors ${
+                on ? "bg-brand text-brand-fg" : "bg-surface-2 hover:bg-brand-soft disabled:opacity-35"
               }`}
             >
               {formatDezena(n)}
@@ -95,7 +95,7 @@ export function SeletorDezenas({ maxDezenas, precoSimples, onConfirmar, rotuloCo
         <p className="text-sm text-muted" aria-live="polite">
           {marcadas.length} de {qtd} escolhidas · <strong className="text-foreground">{formatBRL(precoJogo(qtd, precoSimples))}</strong>
         </p>
-        <button type="button" className="btn" disabled={!completo || enviando} onClick={confirmar}>
+        <button type="button" className="btn" disabled={!completo || enviando} aria-busy={enviando} onClick={confirmar}>
           {enviando ? "Salvando…" : rotuloConfirmar}
         </button>
       </div>
