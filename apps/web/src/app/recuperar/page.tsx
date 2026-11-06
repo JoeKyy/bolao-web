@@ -6,6 +6,7 @@ import { Aviso, Campo } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { useValidacao } from "@/lib/validacao";
 import { Casca } from "@/components/Casca";
+import { EMAIL_PATTERN } from "@/lib/contato";
 
 /** "Esqueci minha senha", no esquema do gestor: link por e-mail ou código de recuperação. */
 export default function Recuperar() {
@@ -73,7 +74,7 @@ export default function Recuperar() {
         <form onSubmit={porEmail} noValidate className="card space-y-3">
           <p className="text-sm text-muted">Mandamos um link para definir uma nova senha. Se não chegar, peça ao administrador um link novo.</p>
           <Campo id="email" rotulo="E-mail" erro={v.erros.email} limpar={v.limpar}>
-            <input type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="email" required pattern={EMAIL_PATTERN} autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Campo>
           <button type="submit" className="btn w-full" disabled={enviando} aria-busy={enviando}>
             Enviar link
@@ -83,7 +84,7 @@ export default function Recuperar() {
         <form onSubmit={porCodigo} noValidate className="card space-y-3">
           <p className="text-sm text-muted">Use um dos códigos de recuperação que você guardou. Cada código vale uma vez.</p>
           <Campo id="email2" rotulo="E-mail" erro={v.erros.email2} limpar={v.limpar}>
-            <input type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="email" required pattern={EMAIL_PATTERN} autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Campo>
           <Campo id="codigo" rotulo="Código (XXXX-XXXX-XXXX)" erro={v.erros.codigo} limpar={v.limpar}>
             <input required maxLength={20} autoComplete="one-time-code" className="input font-mono uppercase" value={codigo} onChange={(e) => setCodigo(e.target.value)} />

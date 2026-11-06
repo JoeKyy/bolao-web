@@ -1,5 +1,5 @@
 "use client";
-import type { ConcursoCaixa, EventoDTO, JogoAdminDTO, ParticipanteAdminDTO, ResumoAdmin } from "@bolao/shared";
+import type { AcessoEmitido, ConcursoCaixa, EventoDTO, JogoAdminDTO, ParticipanteAdminDTO, ResumoAdmin } from "@bolao/shared";
 import { formatBRL, parseDezenas, parseReais } from "@bolao/shared";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { API_URL, api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { formatarDataHora, umEm } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { Casca } from "@/components/Casca";
+import { WHATSAPP_DICA, WHATSAPP_PATTERN, formatarWhatsapp } from "@/lib/contato";
 
 const FAIXA = { sena: "Sena", quina: "Quina", quadra: "Quadra" } as const;
 type Avisar = (a: { erro?: string; ok?: string }) => void;
@@ -41,6 +42,7 @@ function Participante({
   const [nome, setNome] = useState(p.nome);
   const [whatsapp, setWhatsapp] = useState(p.whatsapp);
   const [valorTxt, setValorTxt] = useState("");
+  const [linkAcesso, setLinkAcesso] = useState<string | null>(null);
   const faz = async (fn: () => Promise<unknown>, ok: string) => {
     try {
       await fn();
@@ -97,6 +99,46 @@ function Participante({
           </form>
         </div>
 
+        {!p.temConta && (
+          <div className="space-y-2 rounded-controle bg-surface-2 p-4">
+            <p className="font-medium">Perdeu o acesso?</p>
+            <p className="legenda">
+              Se {p.nome.split(" ")[0]} limpou o navegador ou trocou de celular e não guardou o bolão numa conta, gere um link de acesso e mande pelo WhatsApp. Vale 7 dias e só funciona uma vez.
+            </p>
+            {linkAcesso ? (
+              <div className="space-y-2">
+                <p className="break-all rounded-controle bg-card p-3 font-mono text-caption">{linkAcesso}</p>
+                <div className="flex flex-wrap gap-2">
+                  <BotaoCopiar texto={linkAcesso} rotulo="Copiar link" classe="btn btn-sm" />
+                  <a
+                    className="btn-ghost btn-sm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href={`https://wa.me/${p.whatsapp.replace(/\D/g, "") ? p.whatsapp.replace(/\D/g, "").replace(/^(?!55)/, "55") : ""}?text=${encodeURIComponent(`Oi ${p.nome.split(" ")[0]}, este é o seu link para voltar ao bolão (vale 7 dias, uso único): ${linkAcesso}`)}`}
+                  >
+                    Enviar pelo WhatsApp
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="btn-ghost btn-sm"
+                onClick={async () => {
+                  try {
+                    const r = await api.post<AcessoEmitido>(`${base}/participantes/${p.id}/acesso`);
+                    setLinkAcesso(`${window.location.origin}/acesso/${r.token}`);
+                  } catch (e) {
+                    avisar({ erro: mensagemDe(e) });
+                  }
+                }}
+              >
+                Gerar link de acesso
+              </button>
+            )}
+          </div>
+        )}
+
         {p.whatsapp && (
           <a className="text-sm font-semibold text-brand underline" href={`https://wa.me/${p.whatsapp.replace(/\D/g, "").replace(/^(?!55)/, "55")}`} target="_blank" rel="noopener noreferrer">
             Abrir WhatsApp de {p.nome.split(" ")[0]}
@@ -138,7 +180,7 @@ function Participante({
           }}
         >
           <input aria-label="Nome" className="input" value={nome} minLength={2} maxLength={60} onChange={(e) => setNome(e.target.value)} />
-          <input aria-label="WhatsApp" className="input" value={whatsapp} maxLength={30} placeholder="WhatsApp" onChange={(e) => setWhatsapp(e.target.value)} />
+          <input aria-label="WhatsApp" type="tel" inputMode="tel" pattern={WHATSAPP_PATTERN} title={WHATSAPP_DICA} className="input" value={whatsapp} maxLength={30} placeholder="WhatsApp" onChange={(e) => setWhatsapp(formatarWhatsapp(e.target.value))} />
           <button className="btn-ghost" type="submit">
             Salvar dados
           </button>
@@ -526,7 +568,7 @@ export default function GestaoBolao() {
           }}
         >
           <input aria-label="Nome do novo participante" required minLength={2} maxLength={60} placeholder="Nome" className="input" value={novoNome} onChange={(e) => setNovoNome(e.target.value)} />
-          <input aria-label="WhatsApp do novo participante" maxLength={30} placeholder="WhatsApp (opcional)" className="input" value={novoZap} onChange={(e) => setNovoZap(e.target.value)} />
+          <input aria-label="WhatsApp do novo participante" type="tel" inputMode="tel" pattern={WHATSAPP_PATTERN} title={WHATSAPP_DICA} maxLength={30} placeholder="WhatsApp (opcional)" className="input" value={novoZap} onChange={(e) => setNovoZap(formatarWhatsapp(e.target.value))} />
           <button type="submit" className="btn-ghost">
             Adicionar
           </button>
