@@ -227,7 +227,7 @@ export function Bolinha({ n, acerto = false, tamanho = "md" }: { n: number; acer
   return (
     <span
       className={`inline-flex ${dim} items-center justify-center rounded-full font-semibold tabular-nums ${
-        acerto ? "bg-brand text-brand-fg ring-2 ring-brand/30" : "border border-line bg-card text-foreground"
+        acerto ? "bg-brand text-brand-fg ring-2 ring-brand/30" : "bg-surface-2 text-foreground"
       }`}
       aria-label={acerto ? `${n}, acerto` : String(n)}
     >
@@ -305,9 +305,9 @@ export function SeloSituacao({ situacao }: { situacao: keyof typeof ESTILO_SITUA
 
 export function Numero({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
-    <div className="card !p-3 text-center">
-      <p className="text-xs text-muted">{rotulo}</p>
-      <p className="mt-0.5 text-base font-bold tabular-nums sm:text-lg">{valor}</p>
+    <div className="rounded-cartao bg-brand-soft px-3 py-4 text-center">
+      <p className="legenda text-brand-dark/80">{rotulo}</p>
+      <p className="mt-1 text-h2 font-bold tabular-nums text-brand-dark">{valor}</p>
     </div>
   );
 }

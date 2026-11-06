@@ -51,7 +51,7 @@ export default function Recuperar() {
   return (
     <Casca largura="estreita" centro>
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">Área do organizador</p>
+        <p className="text-body font-semibold text-brand">Área do organizador</p>
         <h1 className="mt-1 text-h1 font-bold tracking-tight">Recuperar acesso</h1>
       </div>
       <div role="tablist" className="grid grid-cols-2 gap-2">

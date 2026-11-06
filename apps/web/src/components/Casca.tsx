@@ -8,15 +8,33 @@ const LARGURA = {
   larga: "max-w-5xl",
 } as const;
 
+/** Marca: a bola da Mega com as seis dezenas; a dourada é a que paga o prêmio. */
+export function Logo({ tamanho = 36 }: { tamanho?: number }) {
+  const pontos = [
+    [11, 12],
+    [20, 12],
+    [29, 12],
+    [11, 24],
+    [20, 24],
+  ];
+  return (
+    <svg aria-hidden="true" width={tamanho} height={tamanho} viewBox="0 0 40 40">
+      <circle cx="20" cy="20" r="20" fill="var(--brand)" />
+      {pontos.map(([x, y]) => (
+        <circle key={`${x}-${y}`} cx={x} cy={y} r="3.6" fill="var(--brand-fg)" />
+      ))}
+      <circle cx="29" cy="24" r="3.6" fill="#f4b323" />
+    </svg>
+  );
+}
+
 function Marca() {
   return (
-    <Link href="/" className="flex items-center gap-2 rounded-controle font-bold tracking-tight text-foreground">
-      <span aria-hidden="true" className="grid h-7 w-7 grid-cols-3 place-items-center gap-px rounded-lg bg-brand p-1">
-        {Array.from({ length: 6 }, (_, i) => (
-          <span key={i} className="h-1.5 w-1.5 rounded-full bg-brand-fg/90" />
-        ))}
+    <Link href="/" className="flex items-center gap-2.5 rounded-controle text-foreground">
+      <Logo />
+      <span className="text-h2 font-extrabold tracking-tight">
+        bolão<span className="text-brand"> da mega</span>
       </span>
-      <span className="text-h3">Bolão da Mega</span>
     </Link>
   );
 }
@@ -39,8 +57,8 @@ export function Casca({
 }) {
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="nao-imprimir border-b border-line bg-card/80 backdrop-blur">
-        <div className={`mx-auto flex h-14 w-full items-center justify-between gap-3 px-4 sm:px-6 ${largura === "larga" ? "max-w-5xl" : "max-w-2xl"}`}>
+      <header className="nao-imprimir sticky top-0 z-40 border-b border-line bg-card/90 backdrop-blur">
+        <div className={`mx-auto flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 ${largura === "larga" ? "max-w-5xl" : "max-w-2xl"}`}>
           <Marca />
           <div className="flex items-center gap-3">
             {acoes}

@@ -51,7 +51,7 @@ export default function ConviteOrganizador() {
   return (
     <Casca largura="estreita" centro>
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">Bolão da Mega</p>
+        <p className="text-body font-semibold text-brand">Bolão da Mega</p>
         <h1 className="mt-1 text-h1 font-bold tracking-tight">{c.tipo === "novo" ? "Criar sua conta de organizador" : "Trocar sua senha"}</h1>
         <p className="mt-2 text-sm text-muted">
           {c.tipo === "novo"

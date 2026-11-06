@@ -48,7 +48,7 @@ export default function Entrar() {
       {c && !c.jaInscrito && (
         <>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-brand">
+            <p className="text-body font-semibold text-brand">
               {c.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
               {c.concurso ? ` · Concurso ${c.concurso}` : ""}
             </p>

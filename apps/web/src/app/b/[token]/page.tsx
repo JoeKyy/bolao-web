@@ -85,7 +85,7 @@ export default function PainelBolao() {
         </div>
       )}
       <header>
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">
+        <p className="text-body font-semibold text-brand">
           {b.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
           {b.concurso ? ` · Concurso ${b.concurso}` : ""}
         </p>

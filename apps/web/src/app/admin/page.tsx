@@ -36,7 +36,7 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
   return (
     <Casca largura="estreita" centro>
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">Área do organizador</p>
+        <p className="text-body font-semibold text-brand">Área do organizador</p>
         <h1 className="mt-1 text-h1 font-bold tracking-tight">Entrar</h1>
       </div>
       <Aviso erro={erro ?? v.resumo} />
@@ -299,7 +299,7 @@ export default function Admin() {
     <Casca largura="larga">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand">{conta.nome || conta.email}</p>
+          <p className="text-body font-semibold text-brand">{conta.nome || conta.email}</p>
           <h1 className="mt-1 text-h1 font-bold tracking-tight sm:text-display">Meus bolões</h1>
           <p className="mt-1 text-sm text-muted">{perfis ? `Perfil: ${perfis}.` : "Pessoa comum: você participa de bolões."}</p>
         </div>
