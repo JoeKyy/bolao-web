@@ -10,6 +10,7 @@ import { API_URL, api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { formatarDataHora, umEm } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { Casca } from "@/components/Casca";
+import { WHATSAPP_DICA, WHATSAPP_PATTERN, formatarWhatsapp } from "@/lib/contato";
 
 const FAIXA = { sena: "Sena", quina: "Quina", quadra: "Quadra" } as const;
 type Avisar = (a: { erro?: string; ok?: string }) => void;
@@ -179,7 +180,7 @@ function Participante({
           }}
         >
           <input aria-label="Nome" className="input" value={nome} minLength={2} maxLength={60} onChange={(e) => setNome(e.target.value)} />
-          <input aria-label="WhatsApp" className="input" value={whatsapp} maxLength={30} placeholder="WhatsApp" onChange={(e) => setWhatsapp(e.target.value)} />
+          <input aria-label="WhatsApp" type="tel" inputMode="tel" pattern={WHATSAPP_PATTERN} title={WHATSAPP_DICA} className="input" value={whatsapp} maxLength={30} placeholder="WhatsApp" onChange={(e) => setWhatsapp(formatarWhatsapp(e.target.value))} />
           <button className="btn-ghost" type="submit">
             Salvar dados
           </button>
@@ -567,7 +568,7 @@ export default function GestaoBolao() {
           }}
         >
           <input aria-label="Nome do novo participante" required minLength={2} maxLength={60} placeholder="Nome" className="input" value={novoNome} onChange={(e) => setNovoNome(e.target.value)} />
-          <input aria-label="WhatsApp do novo participante" maxLength={30} placeholder="WhatsApp (opcional)" className="input" value={novoZap} onChange={(e) => setNovoZap(e.target.value)} />
+          <input aria-label="WhatsApp do novo participante" type="tel" inputMode="tel" pattern={WHATSAPP_PATTERN} title={WHATSAPP_DICA} maxLength={30} placeholder="WhatsApp (opcional)" className="input" value={novoZap} onChange={(e) => setNovoZap(formatarWhatsapp(e.target.value))} />
           <button type="submit" className="btn-ghost">
             Adicionar
           </button>

@@ -15,7 +15,11 @@ export function motivoDoCampo(el: Controle): string {
   }
   if (v.tooShort) return `Use pelo menos ${el.getAttribute("minlength")} caracteres (agora tem ${tam}).`;
   if (v.tooLong) return `Use no máximo ${el.getAttribute("maxlength")} caracteres.`;
-  if (v.patternMismatch) return "O formato não é válido.";
+  if (v.patternMismatch) {
+    if (el.type === "email") return "Informe um e-mail válido, como nome@exemplo.com.";
+    if (el.type === "tel") return "Informe o WhatsApp com DDD, como (11) 91234-5678.";
+    return "O formato não é válido.";
+  }
   if (v.rangeUnderflow) return `O valor mínimo é ${el.getAttribute("min")}.`;
   if (v.rangeOverflow) return `O valor máximo é ${el.getAttribute("max")}.`;
   if (v.badInput) return "Valor inválido.";

@@ -9,6 +9,7 @@ import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
 import { Casca } from "@/components/Casca";
+import { EMAIL_PATTERN } from "@/lib/contato";
 
 /** Link gerado: aparece uma vez só, para o administrador repassar. */
 function LinkGerado({ titulo, convite, nome }: { titulo: string; convite: ConviteOrganizadorCriado; nome: string }) {
@@ -143,7 +144,7 @@ export default function Usuarios() {
               <input required minLength={2} maxLength={60} placeholder="Nome da pessoa" className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
             </Campo>
             <Campo id="email-conta" rotulo="E-mail" erro={v.erros["email-conta"]} limpar={v.limpar}>
-              <input type="email" required maxLength={120} placeholder="nome@exemplo.com" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input type="email" required pattern={EMAIL_PATTERN} maxLength={120} placeholder="nome@exemplo.com" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
             </Campo>
           </div>
           <div className="space-y-2">

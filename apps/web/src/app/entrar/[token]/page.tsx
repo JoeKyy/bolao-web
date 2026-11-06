@@ -11,6 +11,8 @@ import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
 import { Casca } from "@/components/Casca";
 import { chaveEnvio, chaveErro } from "@/components/GuardarConta";
+import { EMAIL_PATTERN } from "@/lib/contato";
+import { WHATSAPP_DICA, WHATSAPP_PATTERN, formatarWhatsapp } from "@/lib/contato";
 
 export default function Entrar() {
   const { token } = useParams<{ token: string }>();
@@ -118,7 +120,7 @@ export default function Entrar() {
                   {modo === "conta" && (
                     <>
                       <Campo id="email" rotulo="E-mail" erro={v.erros.email} dica="Enviamos um link para confirmar que o e-mail é seu." limpar={v.limpar}>
-                        <input type="email" required maxLength={120} autoComplete="email" inputMode="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        <input type="email" required pattern={EMAIL_PATTERN} maxLength={120} autoComplete="email" inputMode="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
                       </Campo>
                       <Campo id="senha" rotulo="Senha (12 a 128 caracteres)" erro={v.erros.senha} dica="Evite senhas comuns e o seu nome ou e-mail. Uma frase com palavras soltas funciona bem." limpar={v.limpar}>
                         <input type="password" required minLength={12} maxLength={128} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
@@ -131,7 +133,7 @@ export default function Entrar() {
                 </>
               )}
               <Campo id="whatsapp" rotulo="WhatsApp (opcional)" erro={v.erros.whatsapp} dica="Só o organizador vê. Usado para avisos do bolão; seus dados são apagados quando o bolão acabar." limpar={v.limpar}>
-                <input type="tel" maxLength={30} autoComplete="tel" placeholder="(11) 90000-0000" className="input" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+                <input type="tel" inputMode="tel" pattern={WHATSAPP_PATTERN} title={WHATSAPP_DICA} maxLength={30} autoComplete="tel" placeholder="(11) 91234-5678" className="input" value={whatsapp} onChange={(e) => setWhatsapp(formatarWhatsapp(e.target.value))} />
               </Campo>
               <button type="submit" className="btn w-full" disabled={enviando} aria-busy={enviando}>
                 {enviando ? "Entrando…" : !logado && modo === "conta" ? "Criar conta e entrar no bolão" : "Entrar no bolão"}

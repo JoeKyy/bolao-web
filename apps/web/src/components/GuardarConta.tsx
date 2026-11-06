@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Aviso, Campo } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { useValidacao } from "@/lib/validacao";
+import { EMAIL_PATTERN } from "@/lib/contato";
 
 /** Guarda, só nesta aba, para qual e-mail já mandamos o link (a tela de entrada pode ter pedido). */
 export const chaveEnvio = (convite: string) => `bolao-conta-enviada:${convite}`;
@@ -79,7 +80,7 @@ export function GuardarConta({ convite, aoTerConta }: { convite: string; aoTerCo
         <form onSubmit={enviar} noValidate className="space-y-3">
           <Aviso erro={falha ?? v.resumo} />
           <Campo id="email-conta" rotulo="Seu e-mail" erro={v.erros["email-conta"]} dica="Enviamos um link para confirmar que o e-mail é seu." limpar={v.limpar}>
-            <input type="email" required maxLength={120} autoComplete="email" inputMode="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="email" required pattern={EMAIL_PATTERN} maxLength={120} autoComplete="email" inputMode="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Campo>
           <Campo id="senha-conta" rotulo="Senha (12 a 128 caracteres)" erro={v.erros["senha-conta"]} dica="Evite senhas comuns e o seu nome ou e-mail. Uma frase com palavras soltas funciona bem." limpar={v.limpar}>
             <input type="password" required minLength={12} maxLength={128} autoComplete="new-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
