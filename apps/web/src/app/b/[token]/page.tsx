@@ -7,10 +7,11 @@ import { useEffect, useState } from "react";
 import { Calculadora } from "@/components/Calculadora";
 import { PixCard } from "@/components/PixCard";
 import { SeletorDezenas } from "@/components/SeletorDezenas";
-import { Aviso, Carregando, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
+import { Aviso, Toast, CarregandoPagina, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
 import { ErroDaApi, api, mensagemDe } from "@/lib/api";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
+import { Casca } from "@/components/Casca";
 
 const FAIXA = { sena: "Sena", quina: "Quina", quadra: "Quadra" } as const;
 
@@ -25,12 +26,12 @@ export default function PainelBolao() {
     if (erro?.status === 401) router.replace(`/entrar/${encodeURIComponent(token)}`);
   }, [erro, router, token]);
 
-  if (carregando) return <Carregando />;
+  if (carregando) return <CarregandoPagina />;
   if (erro && erro.status !== 401) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        {erro.status === 404 ? <Aviso erro="Este convite não existe ou foi trocado. Peça o link novo ao organizador." /> : <ErroDeCarga mensagem={erro.message} tentar={recarregar} />}
-      </main>
+      <Casca>
+        {erro.status === 404 ? <Aviso erro="Este convite não existe ou foi trocado. Peça o link novo ao organizador." /> : <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />}
+      </Casca>
     );
   }
   if (!p) return null;
@@ -74,9 +75,9 @@ export default function PainelBolao() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
+    <Casca largura="larga">
       {p.visaoOrganizador && (
-        <div className="nao-imprimir flex items-center justify-between gap-3 rounded-xl bg-foreground px-4 py-2 text-sm text-white">
+        <div className="nao-imprimir flex items-center justify-between gap-3 rounded-xl bg-foreground px-4 py-2 text-sm text-background">
           <span>Você está vendo como participante.</span>
           <Link className="underline" href={`/admin/${b.id}`}>
             Voltar à gestão
@@ -84,18 +85,18 @@ export default function PainelBolao() {
         </div>
       )}
       <header>
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">
+        <p className="text-body font-semibold text-brand">
           {b.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
           {b.concurso ? ` · Concurso ${b.concurso}` : ""}
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{b.nome}</h1>
+        <h1 className="mt-1 text-h1 font-bold tracking-tight sm:text-display">{b.nome}</h1>
         {b.dataSorteio && <p className="mt-1 text-sm text-muted">Sorteio em {formatarDataHora(b.dataSorteio)}</p>}
       </header>
 
-      <Aviso erro={aviso.erro} ok={aviso.ok} />
+      <Toast aviso={aviso} />
 
       {p.acesso === "aparelho" && (
-        <div className="nao-imprimir space-y-2 rounded-xl border border-line bg-white p-3 text-sm">
+        <div className="nao-imprimir space-y-2 rounded-xl border border-line bg-card p-3 text-sm">
           <p>
             Você está vendo este bolão só neste aparelho. Entre na sua conta e guarde o bolão nela para ver em qualquer lugar.
           </p>
@@ -104,11 +105,13 @@ export default function PainelBolao() {
           </button>
         </div>
       )}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      <aside className="space-y-6 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1">
       {eu && (
         <section aria-labelledby="minha" className="card space-y-3 !border-brand/40">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 id="minha" className="text-lg font-semibold">
+              <h2 id="minha" className="titulo-2">
                 Olá, {eu.nome.split(" ")[0]}!
               </h2>
               <p className="text-sm text-muted">
@@ -119,7 +122,7 @@ export default function PainelBolao() {
           </div>
           {p.pix && <PixCard pix={p.pix} />}
           {!p.pix && eu.devido > eu.pago && (
-            <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+            <p className="rounded-xl bg-warning-soft p-3 text-sm text-warning-fg">
               Falta pagar <strong>{formatBRL(eu.devido - eu.pago)}</strong>. {b.instrucoes || "Combine o pagamento com o organizador."}
             </p>
           )}
@@ -150,22 +153,25 @@ export default function PainelBolao() {
         </Secao>
       )}
 
+      </aside>
+
+      <div className="space-y-6 lg:col-start-1 lg:row-start-1">
       {eu && (
         <Secao titulo="Meus jogos" id="meus">
           {p.meusJogos.length === 0 && <p className="text-sm text-muted">Você ainda não tem jogos. Escolha as dezenas abaixo ou peça uma surpresinha.</p>}
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {p.meusJogos.map((j) => (
-              <li key={j.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line p-3">
-                <div className="space-y-1">
+              <li key={j.id} className="flex flex-wrap items-center justify-between gap-3 rounded-controle bg-surface-2 p-4">
+                <div className="space-y-3">
                   <Dezenas dezenas={j.dezenas} acertos={j.conferencia?.acertadas} tamanho="sm" />
-                  <p className="text-xs text-muted">
+                  <p className="legenda">
                     {j.dezenas.length} dezenas · {formatBRL(j.preco)}
                     {j.surpresinha ? " · surpresinha" : ""}
                     {j.registrado ? " · registrado na Caixa" : ""}
                   </p>
                 </div>
                 {b.inscricoesAbertas && !j.registrado && (
-                  <button type="button" className="text-xs font-semibold text-red-700" onClick={() => remover(j.id)}>
+                  <button type="button" className="btn-danger btn-sm" onClick={() => remover(j.id)}>
                     Remover
                   </button>
                 )}
@@ -215,10 +221,10 @@ export default function PainelBolao() {
       </Secao>
 
       <details className="card">
-        <summary className="cursor-pointer text-lg font-semibold">Todos os jogos do bolão ({p.jogos.length})</summary>
-        <ul className="mt-3 space-y-2">
+        <summary className="cursor-pointer titulo-2">Todos os jogos do bolão ({p.jogos.length})</summary>
+        <ul className="mt-4 space-y-3">
           {p.jogos.map((j) => (
-            <li key={j.id} className="flex flex-wrap items-center gap-2">
+            <li key={j.id} className="flex flex-wrap items-center gap-3 rounded-controle bg-surface-2 p-4">
               <Dezenas dezenas={j.dezenas} acertos={j.conferencia?.acertadas} tamanho="sm" />
               {j.conferencia?.faixa && <span className="chip bg-brand-soft text-brand-dark">{FAIXA[j.conferencia.faixa]}</span>}
               {!j.registrado && <span className="chip bg-line text-muted">a registrar</span>}
@@ -226,6 +232,8 @@ export default function PainelBolao() {
           ))}
         </ul>
       </details>
-    </main>
+      </div>
+      </div>
+    </Casca>
   );
 }

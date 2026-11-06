@@ -39,14 +39,14 @@ export default function Imprimir() {
   const [filtro, setFiltro] = useState<"pagos" | "todos">("pagos");
   if (carregando || erro?.status === 401) return <Carregando />;
   if (erro?.status === 404) return <NaoEncontrado />;
-  if (erro || !r) return <main className="mx-auto max-w-md px-4 py-10"><ErroDeCarga mensagem={erro?.message ?? "Erro"} tentar={recarregar} /></main>;
+  if (erro || !r) return <main className="mx-auto max-w-md px-4 py-10"><ErroDeCarga status={erro?.status} mensagem={erro?.message} tentar={recarregar} /></main>;
 
   const quitado = new Set(r.participantes.filter((p) => p.situacao === "quitado").map((p) => p.id));
   const jogos = r.jogos.filter((j) => (filtro === "pagos" ? quitado.has(j.participanteId) && !j.registrado : true));
   const total = jogos.reduce((s, j) => s + j.preco, 0);
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 bg-white px-4 py-6 text-black">
+    <main className="mx-auto max-w-3xl tema-claro space-y-4 bg-white px-4 py-6 text-black">
       <div className="nao-imprimir flex flex-wrap items-center justify-between gap-3">
         <Link href={`/admin/${id}`} className="text-sm font-semibold text-brand">
           ← Voltar

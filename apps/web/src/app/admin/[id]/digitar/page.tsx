@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
-import { Aviso, NaoEncontrado, Bolinha, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
+import { Aviso, Toast, NaoEncontrado, Bolinha, CarregandoPagina, ErroDeCarga, SeloSituacao } from "@/components/ui";
 import { api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { useRecurso } from "@/lib/useRecurso";
+import { Casca } from "@/components/Casca";
 
 /** Um jogo por tela, com dezenas grandes, para digitar no app Loterias Caixa e marcar como registrado. */
 export default function Digitar() {
@@ -24,9 +25,9 @@ export default function Digitar() {
   const [comprovante, setComprovante] = useState("");
   const [aviso, setAviso] = useState<{ erro?: string; ok?: string }>({});
 
-  if (carregando || erro?.status === 401) return <Carregando />;
+  if (carregando || erro?.status === 401) return <CarregandoPagina largura="estreita" />;
   if (erro?.status === 404) return <NaoEncontrado />;
-  if (erro || !r) return <main className="mx-auto max-w-md px-4 py-10"><ErroDeCarga mensagem={erro?.message ?? "Erro"} tentar={recarregar} /></main>;
+  if (erro || !r) return <Casca largura="estreita"><ErroDeCarga status={erro?.status} mensagem={erro?.message} tentar={recarregar} /></Casca>;
 
   const dono = new Map(r.participantes.map((p) => [p.id, p]));
   // Pagos primeiro: são os que devem ser registrados.
@@ -51,7 +52,7 @@ export default function Digitar() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-4 py-6">
+    <Casca largura="estreita">
       <div className="flex items-center justify-between">
         <Link href={`/admin/${id}`} className="text-sm font-semibold text-brand">
           ← Voltar
@@ -64,7 +65,7 @@ export default function Digitar() {
       <p className="text-sm text-muted">
         Abra o app Loterias Caixa ao lado, digite as dezenas e marque aqui. {r.totais.jogosRegistrados} de {r.totais.jogos} registrados.
       </p>
-      <Aviso erro={aviso.erro} ok={aviso.ok} />
+      <Toast aviso={aviso} />
       {!atual ? (
         <div className="card text-center text-sm">Nenhum jogo {soPendentes ? "pendente de registro" : ""}. 🎉</div>
       ) : (
@@ -113,6 +114,6 @@ export default function Digitar() {
           </div>
         </div>
       )}
-    </main>
+    </Casca>
   );
 }

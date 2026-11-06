@@ -3,11 +3,12 @@ import type { ConviteOrganizadorCriado, Eu, UsuarioDTO } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { Aviso, BotaoCopiar, Campo, Carregando, ErroDeCarga, Secao } from "@/components/ui";
+import { Aviso, BotaoCopiar, Campo, CarregandoPagina, ErroDeCarga, Secao } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
+import { Casca } from "@/components/Casca";
 
 /** Link gerado: aparece uma vez só, para o administrador repassar. */
 function LinkGerado({ titulo, convite, nome }: { titulo: string; convite: ConviteOrganizadorCriado; nome: string }) {
@@ -18,7 +19,7 @@ function LinkGerado({ titulo, convite, nome }: { titulo: string; convite: Convit
       <p className="text-sm font-semibold text-brand-dark">
         {titulo}: link para {nome}
       </p>
-      <p className="break-all rounded-lg bg-white p-2 font-mono text-xs">{link}</p>
+      <p className="break-all rounded-lg bg-card p-2 font-mono text-xs">{link}</p>
       <div className="flex flex-wrap gap-2">
         <BotaoCopiar texto={link} rotulo="Copiar link" />
         <a className="btn-ghost" href={`https://wa.me/?text=${encodeURIComponent(msg)}`} target="_blank" rel="noopener noreferrer">
@@ -62,19 +63,19 @@ export default function Usuarios() {
     if (erro?.status === 401) router.replace("/admin");
   }, [erro, router]);
 
-  if (carregando || erro?.status === 401) return <Carregando />;
+  if (carregando || erro?.status === 401) return <CarregandoPagina />;
   if (erro?.status === 403) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
+      <Casca>
         <Aviso erro="Só o administrador gerencia usuários." />
-      </main>
+      </Casca>
     );
   }
   if (erro) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        <ErroDeCarga mensagem={erro.message} tentar={recarregar} />
-      </main>
+      <Casca>
+        <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />
+      </Casca>
     );
   }
 
@@ -122,12 +123,12 @@ export default function Usuarios() {
   };
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
+    <Casca>
       <Link href="/admin" className="text-sm font-semibold text-brand">
         ← Início
       </Link>
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+        <h1 className="text-h1 font-bold tracking-tight">Usuários</h1>
         <p className="text-sm text-muted">
           Os perfis se combinam: uma pessoa pode ser administradora, tesoureira, as duas coisas ou nenhuma (só participa de bolões). Sempre precisa existir ao menos um administrador ativo.
         </p>
@@ -165,8 +166,8 @@ export default function Usuarios() {
                   <p className="font-medium">
                     {u.nome || u.email}
                     {sou && <span className="ml-2 text-xs text-muted">(você)</span>}
-                    {!u.ativo && <span className="chip ml-2 bg-red-100 text-red-800">desativado</span>}
-                    {u.ativo && u.pendente && <span className="chip ml-2 bg-amber-100 text-amber-800">convite pendente</span>}
+                    {!u.ativo && <span className="chip ml-2 bg-danger-soft text-danger-fg">desativado</span>}
+                    {u.ativo && u.pendente && <span className="chip ml-2 bg-warning-soft text-warning-fg">convite pendente</span>}
                   </p>
                   <p className="truncate text-xs text-muted">
                     {u.email} · {u.boloes} bolão(ões) como tesoureiro · participa de {u.participacoes} · desde {formatarDataHora(u.criadoEm).slice(0, 10)}
@@ -194,6 +195,6 @@ export default function Usuarios() {
           })}
         </ul>
       </Secao>
-    </main>
+    </Casca>
   );
 }
