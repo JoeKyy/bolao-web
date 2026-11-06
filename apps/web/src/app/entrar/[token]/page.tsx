@@ -9,6 +9,7 @@ import { api, mensagemDe } from "@/lib/api";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
+import { Casca } from "@/components/Casca";
 
 export default function Entrar() {
   const { token } = useParams<{ token: string }>();
@@ -41,17 +42,17 @@ export default function Entrar() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-5 px-5 py-10">
+    <Casca largura="estreita" centro>
       {carregando && <Carregando />}
-      {erro && (erro.status === 404 ? <Aviso erro="Este convite não existe ou foi trocado. Peça o link novo ao organizador." /> : <ErroDeCarga mensagem={erro.message} tentar={recarregar} />)}
+      {erro && (erro.status === 404 ? <Aviso erro="Este convite não existe ou foi trocado. Peça o link novo ao organizador." /> : <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />)}
       {c && !c.jaInscrito && (
         <>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-brand">
+            <p className="text-body font-semibold text-brand">
               {c.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
               {c.concurso ? ` · Concurso ${c.concurso}` : ""}
             </p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">{c.nome}</h1>
+            <h1 className="mt-1 text-h1 font-bold tracking-tight">{c.nome}</h1>
             <p className="mt-2 text-sm text-muted">
               {c.dataSorteio ? `Sorteio em ${formatarDataHora(c.dataSorteio)}. ` : ""}Cada jogo de 6 dezenas custa {formatBRL(c.precoSimples)}; você escolhe quantos jogos quer
               fazer depois de entrar.
@@ -83,13 +84,13 @@ export default function Entrar() {
               <Campo id="whatsapp" rotulo="WhatsApp (opcional)" erro={v.erros.whatsapp} dica="Só o organizador vê. Usado para avisos do bolão; seus dados são apagados quando o bolão acabar." limpar={v.limpar}>
                 <input type="tel" maxLength={30} autoComplete="tel" placeholder="(11) 90000-0000" className="input" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
               </Campo>
-              <button type="submit" className="btn w-full" disabled={enviando}>
+              <button type="submit" className="btn w-full" disabled={enviando} aria-busy={enviando}>
                 {enviando ? "Entrando…" : "Entrar no bolão"}
               </button>
             </form>
           )}
         </>
       )}
-    </main>
+    </Casca>
   );
 }

@@ -11,23 +11,23 @@
 :root,
 .tema-claro {
   color-scheme: light;
-  --background: #f6f8f6;
-  --foreground: #14211a;
+  --background: #f9faf9;
+  --foreground: #101a14;
   --card: #ffffff;
-  --surface-2: #eef3ef;
-  --muted: #55655b;
-  --line: #dde5df;
+  --surface-2: #f1f4f2;
+  --muted: #58685f;
+  --line: #e3e8e5;
 
-  --brand: #15803d;
-  --brand-dark: #166534;
-  --brand-soft: #e7f5ec;
+  --brand: #087a4f;
+  --brand-dark: #066443;
+  --brand-soft: #e1f4ea;
   --brand-fg: #ffffff;
   --gold: #8a5a0b;
-  --gold-soft: #fdf3e1;
+  --gold-soft: #fff3d1;
 
-  --success: #15803d;
-  --success-soft: #e7f5ec;
-  --success-fg: #166534;
+  --success: #087a4f;
+  --success-soft: #e1f4ea;
+  --success-fg: #066443;
   --success-line: #b7e0c4;
   --warning: #d97706;
   --warning-soft: #fef3c7;
@@ -42,30 +42,33 @@
   --info-fg: #1d4ed8;
   --info-line: #bfdbfe;
 
-  --sombra-sm: 0 1px 2px rgb(20 33 26 / 0.06);
-  --sombra-md: 0 4px 12px rgb(20 33 26 / 0.08);
+  --sombra-sm: 0 1px 2px rgb(16 26 20 / 0.06), 0 2px 12px rgb(16 26 20 / 0.05);
+  --sombra-md: 0 8px 28px rgb(16 26 20 / 0.14);
 }
 
-/* Tema escuro: segue o sistema. Fora da impressão, que é sempre clara. */
+/*
+ * Tema escuro. O usuário escolhe em "Sistema / Claro / Escuro" (atributo data-tema no <html>, ver
+ * components/AlternarTema.tsx). Sem escolha, segue o sistema. A impressão é sempre clara.
+ */
 @media screen and (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema="claro"]) {
     color-scheme: dark;
-    --background: #0d1410;
+    --background: #0b110e;
     --foreground: #e8efe9;
-    --card: #141d17;
-    --surface-2: #1a251e;
+    --card: #131b16;
+    --surface-2: #1b2620;
     --muted: #9db0a3;
-    --line: #27362d;
+    --line: #26352c;
 
-    --brand: #22c55e;
-    --brand-dark: #4ade80;
-    --brand-soft: #12301d;
-    --brand-fg: #052e16;
+    --brand: #3dd68c;
+    --brand-dark: #6ee7a8;
+    --brand-soft: #11291c;
+    --brand-fg: #04210f;
     --gold: #fbbf24;
     --gold-soft: #2a2210;
 
-    --success: #22c55e;
-    --success-soft: #12301d;
+    --success: #3dd68c;
+    --success-soft: #11291c;
     --success-fg: #86efac;
     --success-line: #1f5a33;
     --warning: #f59e0b;
@@ -84,6 +87,42 @@
     --sombra-sm: 0 1px 2px rgb(0 0 0 / 0.4);
     --sombra-md: 0 4px 12px rgb(0 0 0 / 0.45);
   }
+}
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+  --background: #0b110e;
+  --foreground: #e8efe9;
+  --card: #131b16;
+  --surface-2: #1b2620;
+  --muted: #9db0a3;
+  --line: #26352c;
+
+  --brand: #3dd68c;
+  --brand-dark: #6ee7a8;
+  --brand-soft: #11291c;
+  --brand-fg: #04210f;
+  --gold: #fbbf24;
+  --gold-soft: #2a2210;
+
+  --success: #3dd68c;
+  --success-soft: #11291c;
+  --success-fg: #86efac;
+  --success-line: #1f5a33;
+  --warning: #f59e0b;
+  --warning-soft: #2b2008;
+  --warning-fg: #fcd34d;
+  --warning-line: #5c4410;
+  --danger: #ef4444;
+  --danger-soft: #2f1414;
+  --danger-fg: #fca5a5;
+  --danger-line: #5f2222;
+  --info: #3b82f6;
+  --info-soft: #112240;
+  --info-fg: #93c5fd;
+  --info-line: #1e3a8a;
+
+  --sombra-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --sombra-md: 0 4px 12px rgb(0 0 0 / 0.45);
 }
 
 @theme inline {
@@ -116,7 +155,7 @@
   --color-info-fg: var(--info-fg);
   --color-info-line: var(--info-line);
 
-  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: var(--font-figtree), system-ui, -apple-system, "Segoe UI", sans-serif;
   --shadow-card: var(--sombra-sm);
   --shadow-float: var(--sombra-md);
 
@@ -137,8 +176,8 @@
   --text-caption--line-height: 1rem;
 
   /* Raios: controle, cartão, pílula. */
-  --radius-controle: 0.625rem;
-  --radius-cartao: 1rem;
+  --radius-controle: 0.75rem;
+  --radius-cartao: 1.25rem;
 
   --animate-pulsar: pulsar 1.6s ease-in-out infinite;
   --animate-girar: girar 0.7s linear infinite;
@@ -163,6 +202,14 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  accent-color: var(--brand);
+}
+
+/* Telas largas: tudo que é rem (texto, espaço, larguras) cresce 12,5% para não parecer app de celular. */
+@media (min-width: 64rem) {
+  html {
+    font-size: 112.5%;
+  }
 }
 
 body {
@@ -188,7 +235,7 @@ body {
 
 @layer components {
   .card {
-    @apply rounded-cartao border border-line bg-card p-4 shadow-card sm:p-6;
+    @apply rounded-cartao border border-line bg-card p-5 shadow-card sm:p-7;
   }
 
   /* Botões: .btn (primário) + variantes. Tamanhos: .btn-sm e .btn-lg. */
@@ -196,13 +243,13 @@ body {
   .btn-ghost,
   .btn-gold,
   .btn-danger {
-    @apply relative inline-flex min-h-11 items-center justify-center gap-2 rounded-controle px-4 py-2 text-body font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress aria-busy:opacity-80;
+    @apply relative inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-2 text-body font-semibold transition motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress aria-busy:opacity-80;
   }
   .btn {
-    @apply bg-brand text-brand-fg hover:bg-brand-dark;
+    @apply bg-brand text-brand-fg shadow-card hover:bg-brand-dark;
   }
   .btn-ghost {
-    @apply border border-line bg-card text-foreground hover:bg-brand-soft;
+    @apply border border-foreground/25 bg-card text-foreground hover:border-foreground hover:bg-surface-2;
   }
   .btn-gold {
     @apply border border-gold/40 bg-gold-soft text-gold hover:bg-gold/15;
@@ -211,20 +258,20 @@ body {
     @apply border border-danger-line bg-card text-danger-fg hover:bg-danger-soft;
   }
   .btn-sm {
-    @apply min-h-9 px-3 py-1.5 text-caption;
+    @apply min-h-9 px-4 py-1.5 text-caption;
   }
   .btn-lg {
-    @apply min-h-12 px-5 text-h3;
+    @apply min-h-14 px-8 text-h3;
   }
 
   .input {
-    @apply min-h-11 w-full rounded-controle border border-line bg-card px-3 py-2 text-body text-foreground outline-none placeholder:text-muted/70 focus:border-brand focus:ring-2 focus:ring-brand/25;
+    @apply min-h-12 w-full rounded-controle border border-foreground/25 bg-card px-4 py-2 text-body text-foreground outline-none placeholder:text-muted/70 focus:border-brand focus:ring-2 focus:ring-brand/25;
   }
   .input-erro {
     @apply border-danger bg-danger-soft focus:border-danger focus:ring-danger/25;
   }
   .label {
-    @apply mb-1.5 block text-caption font-semibold uppercase tracking-wide text-muted;
+    @apply mb-1.5 block text-body font-medium text-foreground;
   }
 
   .chip {
@@ -286,6 +333,9 @@ body {
 }
 
 @media print {
+  html {
+    font-size: 100%;
+  }
   .nao-imprimir {
     display: none !important;
   }

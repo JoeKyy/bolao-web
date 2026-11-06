@@ -39,7 +39,7 @@ export default function Imprimir() {
   const [filtro, setFiltro] = useState<"pagos" | "todos">("pagos");
   if (carregando || erro?.status === 401) return <Carregando />;
   if (erro?.status === 404) return <NaoEncontrado />;
-  if (erro || !r) return <main className="mx-auto max-w-md px-4 py-10"><ErroDeCarga mensagem={erro?.message ?? "Erro"} tentar={recarregar} /></main>;
+  if (erro || !r) return <main className="mx-auto max-w-md px-4 py-10"><ErroDeCarga status={erro?.status} mensagem={erro?.message} tentar={recarregar} /></main>;
 
   const quitado = new Set(r.participantes.filter((p) => p.situacao === "quitado").map((p) => p.id));
   const jogos = r.jogos.filter((j) => (filtro === "pagos" ? quitado.has(j.participanteId) && !j.registrado : true));

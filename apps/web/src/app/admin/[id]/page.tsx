@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { SeletorDezenas } from "@/components/SeletorDezenas";
-import { Aviso, NaoEncontrado, BotaoCopiar, Carregando, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
+import { Toast, NaoEncontrado, BotaoCopiar, Carregando, CarregandoPagina, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
 import { API_URL, api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { formatarDataHora, umEm } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
+import { Casca } from "@/components/Casca";
 
 const FAIXA = { sena: "Sena", quina: "Quina", quadra: "Quadra" } as const;
 type Avisar = (a: { erro?: string; ok?: string }) => void;
@@ -102,19 +103,19 @@ function Participante({
           </a>
         )}
 
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {jogos.map((j) => (
-            <li key={j.id} className="flex flex-wrap items-center justify-between gap-2">
-              <div>
+            <li key={j.id} className="flex flex-wrap items-center justify-between gap-3 rounded-controle bg-surface-2 p-4">
+              <div className="space-y-3">
                 <Dezenas dezenas={j.dezenas} acertos={j.conferencia?.acertadas} tamanho="sm" />
-                <p className="text-xs text-muted">
+                <p className="legenda">
                   {formatBRL(j.preco)}
                   {j.surpresinha ? " · surpresinha" : ""}
                   {j.registrado ? ` · registrado${j.comprovante ? ` (${j.comprovante})` : ""}` : " · a registrar"}
                 </p>
               </div>
               {!j.registrado && (
-                <button type="button" className="text-xs font-semibold text-danger-fg" onClick={() => window.confirm("Remover este jogo?") && faz(() => comConfirmacao((q) => api.del(`${base}/jogos/${j.id}${q}`)), "Jogo removido.")}>
+                <button type="button" className="btn-danger btn-sm" onClick={() => window.confirm("Remover este jogo?") && faz(() => comConfirmacao((q) => api.del(`${base}/jogos/${j.id}${q}`)), "Jogo removido.")}>
                   Remover
                 </button>
               )}
@@ -291,7 +292,7 @@ function Resultado({ r, base, avisar, recarregar }: { r: ResumoAdmin; base: stri
           </label>
           <input id="concurso-busca" inputMode="numeric" className="input !w-32" value={concurso} onChange={(e) => setConcurso(e.target.value.replace(/\D/g, ""))} />
         </div>
-        <button type="button" className="btn" onClick={buscar} disabled={buscando}>
+        <button type="button" className="btn" onClick={buscar} disabled={buscando} aria-busy={buscando}>
           {buscando ? "Buscando…" : "Buscar resultado na Caixa"}
         </button>
       </div>
@@ -360,7 +361,7 @@ function Configuracoes({ r, base, avisar, recarregar }: { r: ResumoAdmin; base: 
   );
   return (
     <details className="card">
-      <summary className="cursor-pointer text-lg font-semibold">Configurações do bolão</summary>
+      <summary className="cursor-pointer titulo-2">Configurações do bolão</summary>
       <form onSubmit={salvar} className="mt-3 grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">{campo("nome", "Nome", { maxLength: 80 })}</div>
         {campo("concurso", "Concurso", { inputMode: "numeric" })}
@@ -385,14 +386,14 @@ function Historico({ base }: { base: string }) {
   const [aberto, setAberto] = useState(false);
   return (
     <details className="card" onToggle={(e) => setAberto((e.target as HTMLDetailsElement).open)}>
-      <summary className="cursor-pointer text-lg font-semibold">Histórico</summary>
+      <summary className="cursor-pointer titulo-2">Histórico</summary>
       {aberto && <ListaEventos base={base} />}
     </details>
   );
 }
 function ListaEventos({ base }: { base: string }) {
   const { dados, erro, recarregar } = useRecurso<EventoDTO[]>(`${base}/eventos`);
-  if (erro) return <ErroDeCarga mensagem={erro.message} tentar={recarregar} />;
+  if (erro) return <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />;
   if (!dados) return <Carregando />;
   return (
     <ol className="mt-3 space-y-2 text-sm">
@@ -420,13 +421,13 @@ export default function GestaoBolao() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  if (carregando) return <Carregando />;
+  if (carregando) return <CarregandoPagina />;
   if (erro?.status === 401) {
     router.replace("/admin");
     return null;
   }
   if (erro?.status === 404) return <NaoEncontrado />;
-  if (erro) return <main className="mx-auto max-w-2xl px-4 py-10"><ErroDeCarga mensagem={erro.message} tentar={recarregar} /></main>;
+  if (erro) return <Casca><ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} /></Casca>;
   if (!r) return null;
   const b = r.bolao;
   const link = typeof window === "undefined" ? "" : `${window.location.origin}/entrar/${b.convite}`;
@@ -445,19 +446,19 @@ export default function GestaoBolao() {
   const aRegistrar = r.jogos.filter((j) => !j.registrado && r.participantes.find((p) => p.id === j.participanteId)?.situacao === "quitado").length;
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
+    <Casca largura="larga">
       <Link href="/admin" className="text-sm font-semibold text-brand">
         ← Todos os bolões
       </Link>
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">{b.nome}</h1>
+        <h1 className="text-h1 font-bold tracking-tight sm:text-display">{b.nome}</h1>
         <p className="text-sm text-muted">
           {b.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
           {b.concurso ? ` · concurso ${b.concurso}` : ""}
           {b.dataSorteio ? ` · sorteio ${formatarDataHora(b.dataSorteio)}` : ""} · aposta simples {formatBRL(b.precoSimples)}
         </p>
       </header>
-      <Aviso erro={aviso.erro} ok={aviso.ok} />
+      <Toast aviso={aviso} />
       {b.travado && (
         <p className="rounded-xl border border-warning-line bg-warning-soft p-3 text-sm text-warning-fg">
           {b.resultado ? "Resultado lançado." : "O horário do sorteio já passou."} Inscrições e jogos novos estão fechados, e qualquer mudança que mexa no rateio pede
@@ -465,7 +466,9 @@ export default function GestaoBolao() {
         </p>
       )}
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+      <aside className="space-y-6 lg:col-start-2 lg:row-start-1 lg:sticky lg:top-20">
+      <section className="grid grid-cols-2 gap-3">
         <Numero rotulo="Participantes" valor={String(r.participantes.length)} />
         <Numero rotulo="Arrecadado" valor={formatBRL(r.totais.arrecadado)} />
         <Numero rotulo="A receber" valor={formatBRL(Math.max(0, r.totais.devido - r.totais.arrecadado))} />
@@ -474,7 +477,7 @@ export default function GestaoBolao() {
 
       <Secao titulo="Link de convite" id="convite">
         <p className="break-all rounded-xl bg-background p-3 font-mono text-xs">{link}</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
           <BotaoCopiar texto={link} rotulo="Copiar link" />
           <a className="btn-ghost" href={`https://wa.me/?text=${encodeURIComponent(msgZap)}`} target="_blank" rel="noopener noreferrer">
             Compartilhar no WhatsApp
@@ -483,8 +486,8 @@ export default function GestaoBolao() {
             Ver como participante
           </Link>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
-          <span className={`chip ${b.inscricoesAbertas ? "bg-brand-soft text-brand-dark" : "bg-warning-soft text-warning-fg"}`}>
+        <div className="grid gap-2 border-t border-line pt-3 sm:grid-cols-2 lg:grid-cols-1">
+          <span className={`chip w-fit ${b.inscricoesAbertas ? "bg-brand-soft text-brand-dark" : "bg-warning-soft text-warning-fg"}`}>
             Inscrições {b.inscricoesAbertas ? "abertas" : "encerradas"}
           </span>
           {(b.inscricoesAbertas || !b.travado) && (
@@ -502,7 +505,9 @@ export default function GestaoBolao() {
         </div>
         {!b.pix && <p className="text-xs text-warning-fg">Configure a chave Pix (em Configurações) para os participantes pagarem com QR Code.</p>}
       </Secao>
+      </aside>
 
+      <div className="space-y-6 lg:col-start-1 lg:row-start-1">
       <Secao titulo="Participantes e pagamentos" id="participantes">
         {r.participantes.length === 0 && <p className="text-sm text-muted">Ninguém entrou ainda. Mande o link no grupo.</p>}
         <div className="space-y-2">
@@ -550,7 +555,7 @@ export default function GestaoBolao() {
       <Historico base={base} />
 
       <details className="card">
-        <summary className="cursor-pointer text-lg font-semibold text-danger-fg">Excluir bolão</summary>
+        <summary className="cursor-pointer titulo-2 text-danger-fg">Excluir bolão</summary>
         <form
           className="mt-3 space-y-2"
           onSubmit={(e) => {
@@ -570,6 +575,8 @@ export default function GestaoBolao() {
           </button>
         </form>
       </details>
-    </main>
+      </div>
+      </div>
+    </Casca>
   );
 }
