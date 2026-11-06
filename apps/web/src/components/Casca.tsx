@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AlternarTema } from "./AlternarTema";
+import { MenuUsuario } from "./MenuUsuario";
 
 const LARGURA = {
   estreita: "max-w-md",
@@ -33,9 +34,9 @@ export function Logo({ tamanho = 40 }: { tamanho?: number }) {
 
 function Marca() {
   return (
-    <Link href="/" className="flex items-center gap-2.5 rounded-controle text-foreground">
+    <Link href="/" className="flex shrink-0 items-center gap-2 rounded-controle text-foreground sm:gap-2.5">
       <Logo />
-      <span className="text-h2 font-extrabold tracking-tight">
+      <span className="whitespace-nowrap text-h3 font-extrabold tracking-tight sm:text-h2">
         bolão<span className="text-brand"> da mega</span>
       </span>
     </Link>
@@ -51,11 +52,14 @@ export function Casca({
   largura = "media",
   centro = false,
   acoes,
+  menu = false,
   children,
 }: {
   largura?: keyof typeof LARGURA;
   centro?: boolean;
   acoes?: ReactNode;
+  /** Mostra o menu da conta (avatar, atalhos, sair). Use nas telas de quem está logado. */
+  menu?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -66,6 +70,7 @@ export function Casca({
           <div className="flex items-center gap-3">
             {acoes}
             <AlternarTema />
+            {menu && <MenuUsuario />}
           </div>
         </div>
       </header>

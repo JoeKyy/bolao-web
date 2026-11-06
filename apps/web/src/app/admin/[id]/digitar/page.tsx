@@ -52,7 +52,7 @@ export default function Digitar() {
   }
 
   return (
-    <Casca largura="estreita">
+    <Casca largura="estreita" menu>
       <div className="flex items-center justify-between">
         <Link href={`/admin/${id}`} className="text-sm font-semibold text-brand">
           ← Voltar

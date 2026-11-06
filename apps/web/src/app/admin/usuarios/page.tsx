@@ -67,7 +67,7 @@ export default function Usuarios() {
   if (carregando || erro?.status === 401) return <CarregandoPagina />;
   if (erro?.status === 403) {
     return (
-      <Casca>
+      <Casca menu>
         <Aviso erro="Só o administrador gerencia usuários." />
       </Casca>
     );

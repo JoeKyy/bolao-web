@@ -68,10 +68,10 @@ function AtividadeDaConta() {
   const { dados } = useRecurso<AtividadeContaDTO[]>("/auth/atividade");
   if (!dados || dados.length === 0) return null;
   return (
-    <div className="mt-4 space-y-2 border-t border-line pt-4">
-      <h3 className="text-sm font-semibold">Atividade da conta</h3>
-      <p className="text-xs text-muted">Se alguma linha não foi você nem alguém que você conhece, avise o administrador e troque a senha.</p>
-      <ul className="space-y-1.5 text-sm">
+    <div className="space-y-4 border-t border-line pt-8">
+      <h3 className="titulo-3">Atividade da conta</h3>
+      <p className="legenda">Se alguma linha não foi você nem alguém que você conhece, avise o administrador e troque a senha.</p>
+      <ul className="space-y-3 text-body">
         {dados.map((a) => (
           <li key={a.id}>
             {a.descricao}
@@ -106,16 +106,16 @@ function CodigosRecuperacao() {
     }
   }
   return (
-    <div className="mt-4 space-y-2 border-t border-line pt-4">
-      <h3 className="text-sm font-semibold">Códigos de recuperação</h3>
-      <p className="text-xs text-muted">
+    <div className="space-y-4 border-t border-line pt-8">
+      <h3 className="titulo-3">Códigos de recuperação</h3>
+      <p className="legenda">
         Servem para trocar a senha se você esquecer, sem depender de e-mail nem do administrador. Você tem {dados?.restantes ?? 0} código(s) válido(s).
       </p>
       <Aviso erro={erro} />
       {codigos ? (
         <div className="space-y-2 rounded-xl border border-warning-line bg-warning-soft p-3">
           <p className="text-sm font-semibold text-warning-fg">Guarde estes códigos agora. Eles não aparecem de novo.</p>
-          <ul className="grid grid-cols-2 gap-1 font-mono text-sm">
+          <ul className="grid grid-cols-2 gap-2 font-mono text-body">
             {codigos.map((c) => (
               <li key={c}>{c}</li>
             ))}
@@ -123,9 +123,11 @@ function CodigosRecuperacao() {
           <BotaoCopiar texto={codigos.join("\n")} rotulo="Copiar códigos" />
         </div>
       ) : (
-        <form onSubmit={gerar} className="flex gap-2">
-          <input aria-label="Senha atual para gerar códigos" type="password" required autoComplete="current-password" placeholder="Senha atual" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
-          <button type="submit" className="btn-ghost shrink-0">
+        <form onSubmit={gerar} className="space-y-4">
+          <Campo id="senha-codigos" rotulo="Sua senha atual" dica="Pedimos a senha para que ninguém gere códigos em uma sessão esquecida aberta.">
+            <input type="password" required autoComplete="current-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
+          </Campo>
+          <button type="submit" className="btn-ghost w-full">
             Gerar códigos
           </button>
         </form>
@@ -266,6 +268,7 @@ export default function Admin() {
   const [senhaAtual, setSenhaAtual] = useState("");
   const [senhaNova, setSenhaNova] = useState("");
   const [falha, setFalha] = useState<string | null>(null);
+  const vc = useValidacao();
 
   if (eu.carregando) return <CarregandoPagina />;
   if (eu.erro?.status === 401) return <Login aoEntrar={() => void eu.recarregar()} />;
@@ -278,40 +281,28 @@ export default function Admin() {
   }
   const conta = eu.dados;
 
-  async function sair() {
-    await api.post("/auth/sair").catch(() => undefined);
-    await eu.recarregar();
-  }
-  async function trocarSenha(e: FormEvent) {
+  async function trocarSenha(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setFalha(null);
+    if (!vc.validar(e)) return;
     try {
       await api.post("/auth/senha", { atual: senhaAtual, nova: senhaNova });
       setSenhaAtual("");
       setSenhaNova("");
       await eu.recarregar(); // a troca encerra todas as sessões: volta para o login
     } catch (err) {
-      setFalha(mensagemDe(err));
+      if (!vc.doServidor(err, { atual: "senha-atual", nova: "senha-nova" }, "senha-nova")) setFalha(mensagemDe(err));
     }
   }
   const perfis = [conta.admin && "Administrador", conta.tesoureiro && "Tesoureiro"].filter(Boolean).join(" e ");
 
   return (
-    <Casca largura="larga">
-      <header className="flex items-start justify-between gap-4">
+    <Casca largura="larga" menu>
+      <header>
         <div>
           <p className="text-body font-semibold text-brand">{conta.nome || conta.email}</p>
           <h1 className="mt-1 text-h1 font-bold tracking-tight sm:text-display">Meus bolões</h1>
           <p className="mt-1 text-sm text-muted">{perfis ? `Perfil: ${perfis}.` : "Pessoa comum: você participa de bolões."}</p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <button type="button" className="btn-ghost" onClick={sair}>
-            Sair
-          </button>
-          {conta.admin && (
-            <Link href="/admin/usuarios" className="text-sm font-semibold text-brand underline">
-              Usuários
-            </Link>
-          )}
         </div>
       </header>
 
@@ -324,19 +315,33 @@ export default function Admin() {
       <div className="space-y-6">
       <MeusBoloes />
 
-      <details className="card">
-        <summary className="cursor-pointer font-semibold">Minha conta</summary>
-        <Aviso erro={falha} />
-        <form onSubmit={trocarSenha} className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-          <input aria-label="Senha atual" type="password" required autoComplete="current-password" placeholder="Senha atual" className="input" value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} />
-          <input aria-label="Nova senha" type="password" required minLength={12} maxLength={128} autoComplete="new-password" placeholder="Nova senha (12+)" className="input" value={senhaNova} onChange={(e) => setSenhaNova(e.target.value)} />
-          <button type="submit" className="btn-ghost">
-            Trocar senha
-          </button>
-        </form>
-        <p className="mt-2 text-xs text-muted">Trocar a senha encerra as sessões em todos os aparelhos.</p>
-        <CodigosRecuperacao />
-        <AtividadeDaConta />
+      <details className="card group">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+          <span className="min-w-0">
+            <span className="titulo-2 block">Minha conta</span>
+            <span className="legenda block truncate">{conta.email}</span>
+          </span>
+          <span aria-hidden="true" className="text-muted transition-transform group-open:rotate-180">
+            ⌄
+          </span>
+        </summary>
+        <div className="mt-6 space-y-8">
+          <form onSubmit={trocarSenha} noValidate className="space-y-4">
+            <h3 className="titulo-3">Trocar senha</h3>
+            <Aviso erro={falha ?? vc.resumo} />
+            <Campo id="senha-atual" rotulo="Senha atual" erro={vc.erros["senha-atual"]} limpar={vc.limpar}>
+              <input type="password" required autoComplete="current-password" className="input" value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} />
+            </Campo>
+            <Campo id="senha-nova" rotulo="Nova senha (12 a 128 caracteres)" erro={vc.erros["senha-nova"]} dica="Trocar a senha encerra as sessões em todos os aparelhos." limpar={vc.limpar}>
+              <input type="password" required minLength={12} maxLength={128} autoComplete="new-password" className="input" value={senhaNova} onChange={(e) => setSenhaNova(e.target.value)} />
+            </Campo>
+            <button type="submit" className="btn-ghost w-full">
+              Trocar senha
+            </button>
+          </form>
+          <CodigosRecuperacao />
+          <AtividadeDaConta />
+        </div>
       </details>
       </div>
       </div>
