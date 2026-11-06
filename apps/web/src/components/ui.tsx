@@ -227,7 +227,7 @@ export function Bolinha({ n, acerto = false, tamanho = "md" }: { n: number; acer
   return (
     <span
       className={`inline-flex ${dim} items-center justify-center rounded-full font-semibold tabular-nums ${
-        acerto ? "bg-brand text-brand-fg ring-2 ring-brand/30" : "bg-surface-2 text-foreground"
+        acerto ? "bg-brand text-brand-fg ring-2 ring-brand/30" : "bg-card text-foreground ring-1 ring-line"
       }`}
       aria-label={acerto ? `${n}, acerto` : String(n)}
     >
@@ -239,7 +239,7 @@ export function Bolinha({ n, acerto = false, tamanho = "md" }: { n: number; acer
 export function Dezenas({ dezenas, acertos, tamanho }: { dezenas: number[]; acertos?: number[]; tamanho?: "sm" | "md" | "lg" }) {
   const set = new Set(acertos ?? []);
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-x-3 gap-y-2.5">
       {dezenas.map((n) => (
         <Bolinha key={n} n={n} acerto={set.has(n)} tamanho={tamanho} />
       ))}

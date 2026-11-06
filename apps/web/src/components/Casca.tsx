@@ -8,22 +8,25 @@ const LARGURA = {
   larga: "max-w-5xl",
 } as const;
 
-/** Marca: a bola da Mega com as seis dezenas; a dourada é a que paga o prêmio. */
-export function Logo({ tamanho = 36 }: { tamanho?: number }) {
-  const pontos = [
-    [11, 12],
-    [20, 12],
-    [29, 12],
-    [11, 24],
-    [20, 24],
-  ];
+/** Marca: bola da Mega-Sena com a placa do "6" (as seis dezenas); a bolinha dourada é o prêmio. */
+export function Logo({ tamanho = 40 }: { tamanho?: number }) {
   return (
     <svg aria-hidden="true" width={tamanho} height={tamanho} viewBox="0 0 40 40">
-      <circle cx="20" cy="20" r="20" fill="var(--brand)" />
-      {pontos.map(([x, y]) => (
-        <circle key={`${x}-${y}`} cx={x} cy={y} r="3.6" fill="var(--brand-fg)" />
-      ))}
-      <circle cx="29" cy="24" r="3.6" fill="#f4b323" />
+      <defs>
+        <radialGradient id="bolao-esfera" cx="34%" cy="28%" r="80%">
+          <stop offset="0" stopColor="#35c685" />
+          <stop offset=".55" stopColor="#087a4f" />
+          <stop offset="1" stopColor="#04553a" />
+        </radialGradient>
+      </defs>
+      <circle cx="20" cy="20" r="18" fill="url(#bolao-esfera)" />
+      <ellipse cx="12.5" cy="9.5" rx="5.2" ry="2.6" fill="#fff" opacity=".28" transform="rotate(-35 12.5 9.5)" />
+      <circle cx="20" cy="21" r="10" fill="#fff" />
+      <text x="20" y="26.6" textAnchor="middle" fontSize="15.5" fontWeight="800" fill="#087a4f" style={{ fontFamily: "var(--font-figtree), system-ui, sans-serif" }}>
+        6
+      </text>
+      <circle cx="34" cy="7" r="4" fill="#f4b323" />
+      <circle cx="33" cy="6" r="1.2" fill="#fff" opacity=".7" />
     </svg>
   );
 }

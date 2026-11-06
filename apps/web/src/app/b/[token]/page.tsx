@@ -159,12 +159,12 @@ export default function PainelBolao() {
       {eu && (
         <Secao titulo="Meus jogos" id="meus">
           {p.meusJogos.length === 0 && <p className="text-sm text-muted">Você ainda não tem jogos. Escolha as dezenas abaixo ou peça uma surpresinha.</p>}
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {p.meusJogos.map((j) => (
-              <li key={j.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line p-3">
-                <div className="space-y-1">
+              <li key={j.id} className="flex flex-wrap items-center justify-between gap-3 rounded-controle bg-surface-2 p-4">
+                <div className="space-y-3">
                   <Dezenas dezenas={j.dezenas} acertos={j.conferencia?.acertadas} tamanho="sm" />
-                  <p className="text-xs text-muted">
+                  <p className="legenda">
                     {j.dezenas.length} dezenas · {formatBRL(j.preco)}
                     {j.surpresinha ? " · surpresinha" : ""}
                     {j.registrado ? " · registrado na Caixa" : ""}
@@ -222,9 +222,9 @@ export default function PainelBolao() {
 
       <details className="card">
         <summary className="cursor-pointer titulo-2">Todos os jogos do bolão ({p.jogos.length})</summary>
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-4 space-y-3">
           {p.jogos.map((j) => (
-            <li key={j.id} className="flex flex-wrap items-center gap-2">
+            <li key={j.id} className="flex flex-wrap items-center gap-3 rounded-controle bg-surface-2 p-4">
               <Dezenas dezenas={j.dezenas} acertos={j.conferencia?.acertadas} tamanho="sm" />
               {j.conferencia?.faixa && <span className="chip bg-brand-soft text-brand-dark">{FAIXA[j.conferencia.faixa]}</span>}
               {!j.registrado && <span className="chip bg-line text-muted">a registrar</span>}

@@ -103,19 +103,19 @@ function Participante({
           </a>
         )}
 
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {jogos.map((j) => (
-            <li key={j.id} className="flex flex-wrap items-center justify-between gap-2">
-              <div>
+            <li key={j.id} className="flex flex-wrap items-center justify-between gap-3 rounded-controle bg-surface-2 p-4">
+              <div className="space-y-3">
                 <Dezenas dezenas={j.dezenas} acertos={j.conferencia?.acertadas} tamanho="sm" />
-                <p className="text-xs text-muted">
+                <p className="legenda">
                   {formatBRL(j.preco)}
                   {j.surpresinha ? " · surpresinha" : ""}
                   {j.registrado ? ` · registrado${j.comprovante ? ` (${j.comprovante})` : ""}` : " · a registrar"}
                 </p>
               </div>
               {!j.registrado && (
-                <button type="button" className="text-xs font-semibold text-danger-fg" onClick={() => window.confirm("Remover este jogo?") && faz(() => comConfirmacao((q) => api.del(`${base}/jogos/${j.id}${q}`)), "Jogo removido.")}>
+                <button type="button" className="btn-danger btn-sm" onClick={() => window.confirm("Remover este jogo?") && faz(() => comConfirmacao((q) => api.del(`${base}/jogos/${j.id}${q}`)), "Jogo removido.")}>
                   Remover
                 </button>
               )}
