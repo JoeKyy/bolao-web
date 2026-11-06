@@ -6,7 +6,7 @@ export default function Inicio() {
     <Casca largura="estreita" centro>
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Mega-Sena</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">Bolão da Mega</h1>
+        <h1 className="mt-1 text-display font-bold">Bolão da Mega</h1>
         <p className="mt-3 text-muted">
           Cada grupo tem o seu bolão: escolha seus jogos (ou peça uma surpresinha), pague por Pix e acompanhe a conferência e o rateio.
         </p>

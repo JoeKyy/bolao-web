@@ -70,7 +70,7 @@ export function SeletorDezenas({ maxDezenas, precoSimples, onConfirmar, rotuloCo
         )}
       </div>
 
-      <div role="group" aria-label="Volante de 1 a 60" className="grid grid-cols-10 gap-1">
+      <div role="group" aria-label="Volante de 1 a 60" className="grid grid-cols-6 gap-2 sm:grid-cols-10">
         {Array.from({ length: MAX_NUMERO }, (_, i) => i + 1).map((n) => {
           const on = marcadas.includes(n);
           const bloqueada = !on && completo;
@@ -81,7 +81,7 @@ export function SeletorDezenas({ maxDezenas, precoSimples, onConfirmar, rotuloCo
               aria-pressed={on}
               disabled={bloqueada}
               onClick={() => alternar(n)}
-              className={`aspect-square rounded-lg text-xs font-semibold tabular-nums transition sm:text-sm ${
+              className={`aspect-square min-h-11 rounded-controle text-h3 font-semibold tabular-nums transition-colors ${
                 on ? "bg-brand text-brand-fg" : "border border-line bg-card hover:bg-brand-soft disabled:opacity-35"
               }`}
             >

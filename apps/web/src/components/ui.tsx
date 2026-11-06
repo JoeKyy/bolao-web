@@ -223,7 +223,7 @@ export function Toast({ aviso }: { aviso: { erro?: string; ok?: string } }) {
 }
 
 export function Bolinha({ n, acerto = false, tamanho = "md" }: { n: number; acerto?: boolean; tamanho?: "sm" | "md" | "lg" }) {
-  const dim = tamanho === "sm" ? "h-7 w-7 text-xs" : tamanho === "lg" ? "h-14 w-14 text-2xl" : "h-9 w-9 text-sm";
+  const dim = tamanho === "sm" ? "h-9 w-9 text-body" : tamanho === "lg" ? "h-16 w-16 text-h1" : "h-11 w-11 text-h3";
   return (
     <span
       className={`inline-flex ${dim} items-center justify-center rounded-full font-semibold tabular-nums ${
@@ -239,7 +239,7 @@ export function Bolinha({ n, acerto = false, tamanho = "md" }: { n: number; acer
 export function Dezenas({ dezenas, acertos, tamanho }: { dezenas: number[]; acertos?: number[]; tamanho?: "sm" | "md" | "lg" }) {
   const set = new Set(acertos ?? []);
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-2">
       {dezenas.map((n) => (
         <Bolinha key={n} n={n} acerto={set.has(n)} tamanho={tamanho} />
       ))}
@@ -282,7 +282,7 @@ export function Secao({ titulo, children, acao, id }: { titulo: string; children
   return (
     <section aria-labelledby={id} className="card space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 id={id} className="text-lg font-semibold">
+        <h2 id={id} className="titulo-2">
           {titulo}
         </h2>
         {acao}

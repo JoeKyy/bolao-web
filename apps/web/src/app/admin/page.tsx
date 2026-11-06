@@ -37,7 +37,7 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
     <Casca largura="estreita" centro>
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Área do organizador</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">Entrar</h1>
+        <h1 className="mt-1 text-h1 font-bold tracking-tight">Entrar</h1>
       </div>
       <Aviso erro={erro ?? v.resumo} />
       <form onSubmit={entrar} noValidate className="card flex flex-col gap-3">
@@ -164,12 +164,12 @@ function PainelTesoureiro() {
   return (
     <>
       <section className="space-y-1">
-        <h2 className="text-xl font-bold tracking-tight">Bolões que eu administro</h2>
+        <h2 className="titulo-2">Bolões que eu administro</h2>
         <p className="text-sm text-muted">Você é o tesoureiro deles: o Pix, os convites, os pagamentos e o registro dos jogos são só seus.</p>
       </section>
 
       <form onSubmit={criar} noValidate className="card space-y-3">
-        <h3 className="text-lg font-semibold">Novo bolão</h3>
+        <h3 className="titulo-2">Novo bolão</h3>
         <Aviso erro={falha ?? v.resumo} />
         <Campo id="nome" rotulo="Nome do grupo" erro={v.erros.nome} dica="De 2 a 80 caracteres. Os participantes veem este nome." limpar={v.limpar}>
           <input required minLength={2} maxLength={80} className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
@@ -231,7 +231,7 @@ function MeusBoloes() {
   return (
     <>
       <section className="space-y-1">
-        <h2 className="text-xl font-bold tracking-tight">Bolões de que eu participo</h2>
+        <h2 className="titulo-2">Bolões de que eu participo</h2>
         <p className="text-sm text-muted">Para entrar num bolão novo, abra o link de convite que o tesoureiro mandou, já logado.</p>
       </section>
       {dados && dados.length === 0 && <p className="text-center text-sm text-muted">Você ainda não participa de nenhum bolão com esta conta.</p>}
@@ -296,11 +296,11 @@ export default function Admin() {
   const perfis = [conta.admin && "Administrador", conta.tesoureiro && "Tesoureiro"].filter(Boolean).join(" e ");
 
   return (
-    <Casca>
+    <Casca largura="larga">
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-brand">{conta.nome || conta.email}</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Bolão da Mega</h1>
+          <h1 className="mt-1 text-h1 font-bold tracking-tight sm:text-display">Meus bolões</h1>
           <p className="mt-1 text-sm text-muted">{perfis ? `Perfil: ${perfis}.` : "Pessoa comum: você participa de bolões."}</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
@@ -315,7 +315,13 @@ export default function Admin() {
         </div>
       </header>
 
-      {conta.tesoureiro && <PainelTesoureiro />}
+      <div className={`grid gap-6 lg:items-start ${conta.tesoureiro ? "lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]" : "mx-auto w-full max-w-2xl"}`}>
+      {conta.tesoureiro && (
+        <div className="space-y-6">
+          <PainelTesoureiro />
+        </div>
+      )}
+      <div className="space-y-6">
       <MeusBoloes />
 
       <details className="card">
@@ -332,6 +338,8 @@ export default function Admin() {
         <CodigosRecuperacao />
         <AtividadeDaConta />
       </details>
+      </div>
+      </div>
     </Casca>
   );
 }

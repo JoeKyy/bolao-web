@@ -46,9 +46,12 @@
   --sombra-md: 0 4px 12px rgb(20 33 26 / 0.08);
 }
 
-/* Tema escuro: segue o sistema. Fora da impressão, que é sempre clara. */
+/*
+ * Tema escuro. O usuário escolhe em "Sistema / Claro / Escuro" (atributo data-tema no <html>, ver
+ * components/AlternarTema.tsx). Sem escolha, segue o sistema. A impressão é sempre clara.
+ */
 @media screen and (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema="claro"]) {
     color-scheme: dark;
     --background: #0d1410;
     --foreground: #e8efe9;
@@ -84,6 +87,42 @@
     --sombra-sm: 0 1px 2px rgb(0 0 0 / 0.4);
     --sombra-md: 0 4px 12px rgb(0 0 0 / 0.45);
   }
+}
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+  --background: #0d1410;
+  --foreground: #e8efe9;
+  --card: #141d17;
+  --surface-2: #1a251e;
+  --muted: #9db0a3;
+  --line: #27362d;
+
+  --brand: #22c55e;
+  --brand-dark: #4ade80;
+  --brand-soft: #12301d;
+  --brand-fg: #052e16;
+  --gold: #fbbf24;
+  --gold-soft: #2a2210;
+
+  --success: #22c55e;
+  --success-soft: #12301d;
+  --success-fg: #86efac;
+  --success-line: #1f5a33;
+  --warning: #f59e0b;
+  --warning-soft: #2b2008;
+  --warning-fg: #fcd34d;
+  --warning-line: #5c4410;
+  --danger: #ef4444;
+  --danger-soft: #2f1414;
+  --danger-fg: #fca5a5;
+  --danger-line: #5f2222;
+  --info: #3b82f6;
+  --info-soft: #112240;
+  --info-fg: #93c5fd;
+  --info-line: #1e3a8a;
+
+  --sombra-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --sombra-md: 0 4px 12px rgb(0 0 0 / 0.45);
 }
 
 @theme inline {
@@ -163,6 +202,14 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  accent-color: var(--brand);
+}
+
+/* Telas largas: tudo que é rem (texto, espaço, larguras) cresce 12,5% para não parecer app de celular. */
+@media (min-width: 64rem) {
+  html {
+    font-size: 112.5%;
+  }
 }
 
 body {
@@ -286,6 +333,9 @@ body {
 }
 
 @media print {
+  html {
+    font-size: 100%;
+  }
   .nao-imprimir {
     display: none !important;
   }

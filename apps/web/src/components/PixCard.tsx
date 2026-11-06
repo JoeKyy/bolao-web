@@ -18,7 +18,7 @@ export function PixCard({ pix }: { pix: PixCobranca }) {
         Pague <strong>{formatBRL(pix.valor)}</strong> por Pix. O código já vai com o valor e o identificador{" "}
         <strong className="font-mono">{pix.identificador}</strong>, que ajuda o organizador a achar o seu pagamento.
       </p>
-      <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
+      <div className="flex flex-col items-center gap-3 sm:max-lg:flex-row sm:max-lg:items-start">
         {qr && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={qr} alt="QR Code do Pix" width={160} height={160} className="rounded-lg border border-warning-line bg-white" />

@@ -75,7 +75,7 @@ export default function PainelBolao() {
   }
 
   return (
-    <Casca>
+    <Casca largura="larga">
       {p.visaoOrganizador && (
         <div className="nao-imprimir flex items-center justify-between gap-3 rounded-xl bg-foreground px-4 py-2 text-sm text-background">
           <span>Você está vendo como participante.</span>
@@ -89,7 +89,7 @@ export default function PainelBolao() {
           {b.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
           {b.concurso ? ` · Concurso ${b.concurso}` : ""}
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{b.nome}</h1>
+        <h1 className="mt-1 text-h1 font-bold tracking-tight sm:text-display">{b.nome}</h1>
         {b.dataSorteio && <p className="mt-1 text-sm text-muted">Sorteio em {formatarDataHora(b.dataSorteio)}</p>}
       </header>
 
@@ -105,11 +105,13 @@ export default function PainelBolao() {
           </button>
         </div>
       )}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      <aside className="space-y-6 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1">
       {eu && (
         <section aria-labelledby="minha" className="card space-y-3 !border-brand/40">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 id="minha" className="text-lg font-semibold">
+              <h2 id="minha" className="titulo-2">
                 Olá, {eu.nome.split(" ")[0]}!
               </h2>
               <p className="text-sm text-muted">
@@ -151,6 +153,9 @@ export default function PainelBolao() {
         </Secao>
       )}
 
+      </aside>
+
+      <div className="space-y-6 lg:col-start-1 lg:row-start-1">
       {eu && (
         <Secao titulo="Meus jogos" id="meus">
           {p.meusJogos.length === 0 && <p className="text-sm text-muted">Você ainda não tem jogos. Escolha as dezenas abaixo ou peça uma surpresinha.</p>}
@@ -166,7 +171,7 @@ export default function PainelBolao() {
                   </p>
                 </div>
                 {b.inscricoesAbertas && !j.registrado && (
-                  <button type="button" className="text-xs font-semibold text-danger-fg" onClick={() => remover(j.id)}>
+                  <button type="button" className="btn-danger btn-sm" onClick={() => remover(j.id)}>
                     Remover
                   </button>
                 )}
@@ -216,7 +221,7 @@ export default function PainelBolao() {
       </Secao>
 
       <details className="card">
-        <summary className="cursor-pointer text-lg font-semibold">Todos os jogos do bolão ({p.jogos.length})</summary>
+        <summary className="cursor-pointer titulo-2">Todos os jogos do bolão ({p.jogos.length})</summary>
         <ul className="mt-3 space-y-2">
           {p.jogos.map((j) => (
             <li key={j.id} className="flex flex-wrap items-center gap-2">
@@ -227,6 +232,8 @@ export default function PainelBolao() {
           ))}
         </ul>
       </details>
+      </div>
+      </div>
     </Casca>
   );
 }

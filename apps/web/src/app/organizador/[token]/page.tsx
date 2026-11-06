@@ -52,7 +52,7 @@ export default function ConviteOrganizador() {
     <Casca largura="estreita" centro>
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Bolão da Mega</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">{c.tipo === "novo" ? "Criar sua conta de organizador" : "Trocar sua senha"}</h1>
+        <h1 className="mt-1 text-h1 font-bold tracking-tight">{c.tipo === "novo" ? "Criar sua conta de organizador" : "Trocar sua senha"}</h1>
         <p className="mt-2 text-sm text-muted">
           {c.tipo === "novo"
             ? "Como organizador você é o tesoureiro dos seus bolões: configura o Pix, manda os convites, confirma os pagamentos e registra os jogos na Caixa."

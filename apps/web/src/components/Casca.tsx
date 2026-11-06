@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AlternarTema } from "./AlternarTema";
 
 const LARGURA = {
   estreita: "max-w-md",
@@ -41,7 +42,10 @@ export function Casca({
       <header className="nao-imprimir border-b border-line bg-card/80 backdrop-blur">
         <div className={`mx-auto flex h-14 w-full items-center justify-between gap-3 px-4 sm:px-6 ${largura === "larga" ? "max-w-5xl" : "max-w-2xl"}`}>
           <Marca />
-          {acoes}
+          <div className="flex items-center gap-3">
+            {acoes}
+            <AlternarTema />
+          </div>
         </div>
       </header>
       <main className={`mx-auto flex w-full flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10 ${LARGURA[largura]} ${centro ? "justify-center" : ""}`}>{children}</main>

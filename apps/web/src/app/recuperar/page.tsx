@@ -52,7 +52,7 @@ export default function Recuperar() {
     <Casca largura="estreita" centro>
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Área do organizador</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">Recuperar acesso</h1>
+        <h1 className="mt-1 text-h1 font-bold tracking-tight">Recuperar acesso</h1>
       </div>
       <div role="tablist" className="grid grid-cols-2 gap-2">
         {(["email", "codigo"] as const).map((m) => (

@@ -128,7 +128,7 @@ export default function Usuarios() {
         ← Início
       </Link>
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+        <h1 className="text-h1 font-bold tracking-tight">Usuários</h1>
         <p className="text-sm text-muted">
           Os perfis se combinam: uma pessoa pode ser administradora, tesoureira, as duas coisas ou nenhuma (só participa de bolões). Sempre precisa existir ao menos um administrador ativo.
         </p>

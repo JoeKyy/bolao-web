@@ -52,7 +52,7 @@ export default function Entrar() {
               {c.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
               {c.concurso ? ` · Concurso ${c.concurso}` : ""}
             </p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">{c.nome}</h1>
+            <h1 className="mt-1 text-h1 font-bold tracking-tight">{c.nome}</h1>
             <p className="mt-2 text-sm text-muted">
               {c.dataSorteio ? `Sorteio em ${formatarDataHora(c.dataSorteio)}. ` : ""}Cada jogo de 6 dezenas custa {formatBRL(c.precoSimples)}; você escolhe quantos jogos quer
               fazer depois de entrar.

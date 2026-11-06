@@ -361,7 +361,7 @@ function Configuracoes({ r, base, avisar, recarregar }: { r: ResumoAdmin; base: 
   );
   return (
     <details className="card">
-      <summary className="cursor-pointer text-lg font-semibold">Configurações do bolão</summary>
+      <summary className="cursor-pointer titulo-2">Configurações do bolão</summary>
       <form onSubmit={salvar} className="mt-3 grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">{campo("nome", "Nome", { maxLength: 80 })}</div>
         {campo("concurso", "Concurso", { inputMode: "numeric" })}
@@ -386,7 +386,7 @@ function Historico({ base }: { base: string }) {
   const [aberto, setAberto] = useState(false);
   return (
     <details className="card" onToggle={(e) => setAberto((e.target as HTMLDetailsElement).open)}>
-      <summary className="cursor-pointer text-lg font-semibold">Histórico</summary>
+      <summary className="cursor-pointer titulo-2">Histórico</summary>
       {aberto && <ListaEventos base={base} />}
     </details>
   );
@@ -446,12 +446,12 @@ export default function GestaoBolao() {
   const aRegistrar = r.jogos.filter((j) => !j.registrado && r.participantes.find((p) => p.id === j.participanteId)?.situacao === "quitado").length;
 
   return (
-    <Casca>
+    <Casca largura="larga">
       <Link href="/admin" className="text-sm font-semibold text-brand">
         ← Todos os bolões
       </Link>
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">{b.nome}</h1>
+        <h1 className="text-h1 font-bold tracking-tight sm:text-display">{b.nome}</h1>
         <p className="text-sm text-muted">
           {b.tipo === "VIRADA" ? "Mega da Virada" : "Mega-Sena"}
           {b.concurso ? ` · concurso ${b.concurso}` : ""}
@@ -466,7 +466,9 @@ export default function GestaoBolao() {
         </p>
       )}
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+      <aside className="space-y-6 lg:col-start-2 lg:row-start-1 lg:sticky lg:top-20">
+      <section className="grid grid-cols-2 gap-3">
         <Numero rotulo="Participantes" valor={String(r.participantes.length)} />
         <Numero rotulo="Arrecadado" valor={formatBRL(r.totais.arrecadado)} />
         <Numero rotulo="A receber" valor={formatBRL(Math.max(0, r.totais.devido - r.totais.arrecadado))} />
@@ -475,7 +477,7 @@ export default function GestaoBolao() {
 
       <Secao titulo="Link de convite" id="convite">
         <p className="break-all rounded-xl bg-background p-3 font-mono text-xs">{link}</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
           <BotaoCopiar texto={link} rotulo="Copiar link" />
           <a className="btn-ghost" href={`https://wa.me/?text=${encodeURIComponent(msgZap)}`} target="_blank" rel="noopener noreferrer">
             Compartilhar no WhatsApp
@@ -484,8 +486,8 @@ export default function GestaoBolao() {
             Ver como participante
           </Link>
         </div>
-        <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
-          <span className={`chip ${b.inscricoesAbertas ? "bg-brand-soft text-brand-dark" : "bg-warning-soft text-warning-fg"}`}>
+        <div className="grid gap-2 border-t border-line pt-3 sm:grid-cols-2 lg:grid-cols-1">
+          <span className={`chip w-fit ${b.inscricoesAbertas ? "bg-brand-soft text-brand-dark" : "bg-warning-soft text-warning-fg"}`}>
             Inscrições {b.inscricoesAbertas ? "abertas" : "encerradas"}
           </span>
           {(b.inscricoesAbertas || !b.travado) && (
@@ -503,7 +505,9 @@ export default function GestaoBolao() {
         </div>
         {!b.pix && <p className="text-xs text-warning-fg">Configure a chave Pix (em Configurações) para os participantes pagarem com QR Code.</p>}
       </Secao>
+      </aside>
 
+      <div className="space-y-6 lg:col-start-1 lg:row-start-1">
       <Secao titulo="Participantes e pagamentos" id="participantes">
         {r.participantes.length === 0 && <p className="text-sm text-muted">Ninguém entrou ainda. Mande o link no grupo.</p>}
         <div className="space-y-2">
@@ -551,7 +555,7 @@ export default function GestaoBolao() {
       <Historico base={base} />
 
       <details className="card">
-        <summary className="cursor-pointer text-lg font-semibold text-danger-fg">Excluir bolão</summary>
+        <summary className="cursor-pointer titulo-2 text-danger-fg">Excluir bolão</summary>
         <form
           className="mt-3 space-y-2"
           onSubmit={(e) => {
@@ -571,6 +575,8 @@ export default function GestaoBolao() {
           </button>
         </form>
       </details>
+      </div>
+      </div>
     </Casca>
   );
 }
