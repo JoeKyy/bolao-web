@@ -10,6 +10,7 @@ import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
 import { Casca } from "@/components/Casca";
+import { chaveEnvio } from "@/components/GuardarConta";
 
 export default function Entrar() {
   const { token } = useParams<{ token: string }>();
@@ -18,6 +19,7 @@ export default function Entrar() {
   const eu = useRecurso<Eu>("/auth/eu"); // 401 = não está logado; segue pelo link, sem conta
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
   const [falha, setFalha] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const v = useValidacao();
@@ -34,6 +36,15 @@ export default function Entrar() {
     setEnviando(true);
     try {
       await api.post(`/convites/${encodeURIComponent(token)}/inscricao`, logado ? { whatsapp } : { nome, whatsapp });
+      if (!logado && email) {
+        // Já pede o link da conta; se falhar, a pessoa pede de novo na tela do bolão (não trava a entrada).
+        try {
+          await api.post(`/convites/${encodeURIComponent(token)}/conta`, { email });
+          sessionStorage.setItem(chaveEnvio(token), email);
+        } catch {
+          /* segue sem o link */
+        }
+      }
       router.replace(`/b/${encodeURIComponent(token)}`);
     } catch (err) {
       if (!v.doServidor(err, { nome: "nome", whatsapp: "whatsapp" })) setFalha(mensagemDe(err));
@@ -71,6 +82,9 @@ export default function Entrar() {
                 <>
                   <Campo id="nome" rotulo="Seu nome" erro={v.erros.nome} limpar={v.limpar}>
                     <input required minLength={2} maxLength={60} autoComplete="name" className="input" value={nome} onChange={(e) => setNome(e.target.value)} />
+                  </Campo>
+                  <Campo id="email" rotulo="E-mail (opcional)" erro={v.erros.email} dica="Para guardar o bolão numa conta e entrar de qualquer aparelho, sem perder seus jogos se limpar o navegador. Enviamos um link para confirmar." limpar={v.limpar}>
+                    <input type="email" maxLength={120} autoComplete="email" inputMode="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </Campo>
                   <p className="text-xs text-muted">
                     Tem conta?{" "}
