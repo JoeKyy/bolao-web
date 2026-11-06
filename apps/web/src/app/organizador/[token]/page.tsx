@@ -2,10 +2,11 @@
 import type { ConviteOrganizadorPublico } from "@bolao/shared";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Aviso, Campo, Carregando, ErroDeCarga } from "@/components/ui";
+import { Aviso, Campo, CarregandoPagina, ErroDeCarga } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
+import { Casca } from "@/components/Casca";
 
 const SENHA_MINIMA = 12;
 
@@ -21,12 +22,12 @@ export default function ConviteOrganizador() {
   const [enviando, setEnviando] = useState(false);
   const v = useValidacao();
 
-  if (carregando) return <Carregando />;
+  if (carregando) return <CarregandoPagina largura="estreita" forma="formulario" />;
   if (erro) {
     return (
-      <main className="mx-auto max-w-sm px-5 py-10">
-        {erro.status === 404 ? <Aviso erro="Este link não vale mais (já foi usado, expirou ou foi trocado). Peça um novo ao administrador." /> : <ErroDeCarga mensagem={erro.message} tentar={recarregar} />}
-      </main>
+      <Casca largura="estreita">
+        {erro.status === 404 ? <Aviso erro="Este link não vale mais (já foi usado, expirou ou foi trocado). Peça um novo ao administrador." /> : <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />}
+      </Casca>
     );
   }
   if (!c) return null;
@@ -48,7 +49,7 @@ export default function ConviteOrganizador() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 px-5 py-10">
+    <Casca largura="estreita" centro>
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Bolão da Mega</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">{c.tipo === "novo" ? "Criar sua conta de organizador" : "Trocar sua senha"}</h1>
@@ -80,10 +81,10 @@ export default function ConviteOrganizador() {
         <Campo id="confirma" rotulo="Repita a senha" erro={v.erros.confirma} limpar={v.limpar}>
           <input type="password" required autoComplete="new-password" className="input" value={confirma} onChange={(e) => setConfirma(e.target.value)} />
         </Campo>
-        <button type="submit" className="btn w-full" disabled={enviando}>
+        <button type="submit" className="btn w-full" disabled={enviando} aria-busy={enviando}>
           {enviando ? "Salvando…" : c.tipo === "novo" ? "Criar conta" : "Trocar senha"}
         </button>
       </form>
-    </main>
+    </Casca>
   );
 }

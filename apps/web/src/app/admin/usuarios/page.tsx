@@ -3,11 +3,12 @@ import type { ConviteOrganizadorCriado, Eu, UsuarioDTO } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { Aviso, BotaoCopiar, Campo, Carregando, ErroDeCarga, Secao } from "@/components/ui";
+import { Aviso, BotaoCopiar, Campo, CarregandoPagina, ErroDeCarga, Secao } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
+import { Casca } from "@/components/Casca";
 
 /** Link gerado: aparece uma vez só, para o administrador repassar. */
 function LinkGerado({ titulo, convite, nome }: { titulo: string; convite: ConviteOrganizadorCriado; nome: string }) {
@@ -62,19 +63,19 @@ export default function Usuarios() {
     if (erro?.status === 401) router.replace("/admin");
   }, [erro, router]);
 
-  if (carregando || erro?.status === 401) return <Carregando />;
+  if (carregando || erro?.status === 401) return <CarregandoPagina />;
   if (erro?.status === 403) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
+      <Casca>
         <Aviso erro="Só o administrador gerencia usuários." />
-      </main>
+      </Casca>
     );
   }
   if (erro) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        <ErroDeCarga mensagem={erro.message} tentar={recarregar} />
-      </main>
+      <Casca>
+        <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />
+      </Casca>
     );
   }
 
@@ -122,7 +123,7 @@ export default function Usuarios() {
   };
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
+    <Casca>
       <Link href="/admin" className="text-sm font-semibold text-brand">
         ← Início
       </Link>
@@ -194,6 +195,6 @@ export default function Usuarios() {
           })}
         </ul>
       </Secao>
-    </main>
+    </Casca>
   );
 }

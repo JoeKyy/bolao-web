@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { SeletorDezenas } from "@/components/SeletorDezenas";
-import { Aviso, NaoEncontrado, BotaoCopiar, Carregando, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
+import { Toast, NaoEncontrado, BotaoCopiar, Carregando, CarregandoPagina, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
 import { API_URL, api, comConfirmacao, mensagemDe } from "@/lib/api";
 import { formatarDataHora, umEm } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
+import { Casca } from "@/components/Casca";
 
 const FAIXA = { sena: "Sena", quina: "Quina", quadra: "Quadra" } as const;
 type Avisar = (a: { erro?: string; ok?: string }) => void;
@@ -291,7 +292,7 @@ function Resultado({ r, base, avisar, recarregar }: { r: ResumoAdmin; base: stri
           </label>
           <input id="concurso-busca" inputMode="numeric" className="input !w-32" value={concurso} onChange={(e) => setConcurso(e.target.value.replace(/\D/g, ""))} />
         </div>
-        <button type="button" className="btn" onClick={buscar} disabled={buscando}>
+        <button type="button" className="btn" onClick={buscar} disabled={buscando} aria-busy={buscando}>
           {buscando ? "Buscando…" : "Buscar resultado na Caixa"}
         </button>
       </div>
@@ -392,7 +393,7 @@ function Historico({ base }: { base: string }) {
 }
 function ListaEventos({ base }: { base: string }) {
   const { dados, erro, recarregar } = useRecurso<EventoDTO[]>(`${base}/eventos`);
-  if (erro) return <ErroDeCarga mensagem={erro.message} tentar={recarregar} />;
+  if (erro) return <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />;
   if (!dados) return <Carregando />;
   return (
     <ol className="mt-3 space-y-2 text-sm">
@@ -420,13 +421,13 @@ export default function GestaoBolao() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  if (carregando) return <Carregando />;
+  if (carregando) return <CarregandoPagina />;
   if (erro?.status === 401) {
     router.replace("/admin");
     return null;
   }
   if (erro?.status === 404) return <NaoEncontrado />;
-  if (erro) return <main className="mx-auto max-w-2xl px-4 py-10"><ErroDeCarga mensagem={erro.message} tentar={recarregar} /></main>;
+  if (erro) return <Casca><ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} /></Casca>;
   if (!r) return null;
   const b = r.bolao;
   const link = typeof window === "undefined" ? "" : `${window.location.origin}/entrar/${b.convite}`;
@@ -445,7 +446,7 @@ export default function GestaoBolao() {
   const aRegistrar = r.jogos.filter((j) => !j.registrado && r.participantes.find((p) => p.id === j.participanteId)?.situacao === "quitado").length;
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
+    <Casca>
       <Link href="/admin" className="text-sm font-semibold text-brand">
         ← Todos os bolões
       </Link>
@@ -457,7 +458,7 @@ export default function GestaoBolao() {
           {b.dataSorteio ? ` · sorteio ${formatarDataHora(b.dataSorteio)}` : ""} · aposta simples {formatBRL(b.precoSimples)}
         </p>
       </header>
-      <Aviso erro={aviso.erro} ok={aviso.ok} />
+      <Toast aviso={aviso} />
       {b.travado && (
         <p className="rounded-xl border border-warning-line bg-warning-soft p-3 text-sm text-warning-fg">
           {b.resultado ? "Resultado lançado." : "O horário do sorteio já passou."} Inscrições e jogos novos estão fechados, e qualquer mudança que mexa no rateio pede
@@ -570,6 +571,6 @@ export default function GestaoBolao() {
           </button>
         </form>
       </details>
-    </main>
+    </Casca>
   );
 }

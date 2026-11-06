@@ -7,10 +7,11 @@ import { useEffect, useState } from "react";
 import { Calculadora } from "@/components/Calculadora";
 import { PixCard } from "@/components/PixCard";
 import { SeletorDezenas } from "@/components/SeletorDezenas";
-import { Aviso, Carregando, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
+import { Aviso, Toast, CarregandoPagina, Dezenas, ErroDeCarga, Numero, Secao, SeloSituacao } from "@/components/ui";
 import { ErroDaApi, api, mensagemDe } from "@/lib/api";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
+import { Casca } from "@/components/Casca";
 
 const FAIXA = { sena: "Sena", quina: "Quina", quadra: "Quadra" } as const;
 
@@ -25,12 +26,12 @@ export default function PainelBolao() {
     if (erro?.status === 401) router.replace(`/entrar/${encodeURIComponent(token)}`);
   }, [erro, router, token]);
 
-  if (carregando) return <Carregando />;
+  if (carregando) return <CarregandoPagina />;
   if (erro && erro.status !== 401) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        {erro.status === 404 ? <Aviso erro="Este convite não existe ou foi trocado. Peça o link novo ao organizador." /> : <ErroDeCarga mensagem={erro.message} tentar={recarregar} />}
-      </main>
+      <Casca>
+        {erro.status === 404 ? <Aviso erro="Este convite não existe ou foi trocado. Peça o link novo ao organizador." /> : <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />}
+      </Casca>
     );
   }
   if (!p) return null;
@@ -74,7 +75,7 @@ export default function PainelBolao() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
+    <Casca>
       {p.visaoOrganizador && (
         <div className="nao-imprimir flex items-center justify-between gap-3 rounded-xl bg-foreground px-4 py-2 text-sm text-background">
           <span>Você está vendo como participante.</span>
@@ -92,7 +93,7 @@ export default function PainelBolao() {
         {b.dataSorteio && <p className="mt-1 text-sm text-muted">Sorteio em {formatarDataHora(b.dataSorteio)}</p>}
       </header>
 
-      <Aviso erro={aviso.erro} ok={aviso.ok} />
+      <Toast aviso={aviso} />
 
       {p.acesso === "aparelho" && (
         <div className="nao-imprimir space-y-2 rounded-xl border border-line bg-card p-3 text-sm">
@@ -226,6 +227,6 @@ export default function PainelBolao() {
           ))}
         </ul>
       </details>
-    </main>
+    </Casca>
   );
 }

@@ -4,12 +4,13 @@ import { formatBRL } from "@bolao/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Aviso, BotaoCopiar, Campo, Carregando, ErroDeCarga, SeloSituacao } from "@/components/ui";
+import { Aviso, BotaoCopiar, Campo, Carregando, CarregandoPagina, ErroDeCarga, SeloSituacao } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { entrarComSenha } from "@/lib/loginCripto";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
+import { Casca } from "@/components/Casca";
 
 function Login({ aoEntrar }: { aoEntrar: () => void }) {
   const [email, setEmail] = useState("");
@@ -33,7 +34,7 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
     }
   }
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 px-5 py-10">
+    <Casca largura="estreita" centro>
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Área do organizador</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">Entrar</h1>
@@ -46,7 +47,7 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
         <Campo id="senha" rotulo="Senha" erro={v.erros.senha} limpar={v.limpar}>
           <input type="password" required autoComplete="current-password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} />
         </Campo>
-        <button type="submit" className="btn" disabled={enviando}>
+        <button type="submit" className="btn" disabled={enviando} aria-busy={enviando}>
           {enviando ? "Entrando…" : "Entrar"}
         </button>
       </form>
@@ -58,7 +59,7 @@ function Login({ aoEntrar }: { aoEntrar: () => void }) {
           Voltar
         </Link>
       </div>
-    </main>
+    </Casca>
   );
 }
 
@@ -144,7 +145,7 @@ function PainelTesoureiro() {
   const v = useValidacao();
 
   if (carregando) return <Carregando />;
-  if (erro) return <ErroDeCarga mensagem={erro.message} tentar={recarregar} />;
+  if (erro) return <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />;
 
   async function criar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -226,7 +227,7 @@ function PainelTesoureiro() {
 function MeusBoloes() {
   const { dados, erro, carregando, recarregar } = useRecurso<ParticipacaoDTO[]>("/participacoes");
   if (carregando) return <Carregando />;
-  if (erro) return <ErroDeCarga mensagem={erro.message} tentar={recarregar} />;
+  if (erro) return <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />;
   return (
     <>
       <section className="space-y-1">
@@ -266,13 +267,13 @@ export default function Admin() {
   const [senhaNova, setSenhaNova] = useState("");
   const [falha, setFalha] = useState<string | null>(null);
 
-  if (eu.carregando) return <Carregando />;
+  if (eu.carregando) return <CarregandoPagina />;
   if (eu.erro?.status === 401) return <Login aoEntrar={() => void eu.recarregar()} />;
   if (eu.erro || !eu.dados) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        <ErroDeCarga mensagem={eu.erro?.message ?? "Erro"} tentar={eu.recarregar} />
-      </main>
+      <Casca>
+        <ErroDeCarga status={eu.erro?.status} mensagem={eu.erro?.message} tentar={eu.recarregar} />
+      </Casca>
     );
   }
   const conta = eu.dados;
@@ -295,7 +296,7 @@ export default function Admin() {
   const perfis = [conta.admin && "Administrador", conta.tesoureiro && "Tesoureiro"].filter(Boolean).join(" e ");
 
   return (
-    <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 sm:py-10">
+    <Casca>
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-brand">{conta.nome || conta.email}</p>
@@ -331,6 +332,6 @@ export default function Admin() {
         <CodigosRecuperacao />
         <AtividadeDaConta />
       </details>
-    </main>
+    </Casca>
   );
 }

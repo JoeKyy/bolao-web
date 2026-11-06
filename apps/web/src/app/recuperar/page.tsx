@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { Aviso, Campo } from "@/components/ui";
 import { api, mensagemDe } from "@/lib/api";
 import { useValidacao } from "@/lib/validacao";
+import { Casca } from "@/components/Casca";
 
 /** "Esqueci minha senha", no esquema do gestor: link por e-mail ou código de recuperação. */
 export default function Recuperar() {
@@ -48,7 +49,7 @@ export default function Recuperar() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 px-5 py-10">
+    <Casca largura="estreita" centro>
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">Área do organizador</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">Recuperar acesso</h1>
@@ -74,7 +75,7 @@ export default function Recuperar() {
           <Campo id="email" rotulo="E-mail" erro={v.erros.email} limpar={v.limpar}>
             <input type="email" required autoComplete="username" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Campo>
-          <button type="submit" className="btn w-full" disabled={enviando}>
+          <button type="submit" className="btn w-full" disabled={enviando} aria-busy={enviando}>
             Enviar link
           </button>
         </form>
@@ -93,7 +94,7 @@ export default function Recuperar() {
           <Campo id="confirma" rotulo="Repita a nova senha" erro={v.erros.confirma} limpar={v.limpar}>
             <input type="password" required autoComplete="new-password" className="input" value={confirma} onChange={(e) => setConfirma(e.target.value)} />
           </Campo>
-          <button type="submit" className="btn w-full" disabled={enviando}>
+          <button type="submit" className="btn w-full" disabled={enviando} aria-busy={enviando}>
             Trocar senha e entrar
           </button>
         </form>
@@ -101,6 +102,6 @@ export default function Recuperar() {
       <Link href="/admin" className="text-sm text-muted underline">
         Voltar ao login
       </Link>
-    </main>
+    </Casca>
   );
 }

@@ -9,6 +9,7 @@ import { api, mensagemDe } from "@/lib/api";
 import { formatarDataHora } from "@/lib/datas";
 import { useRecurso } from "@/lib/useRecurso";
 import { useValidacao } from "@/lib/validacao";
+import { Casca } from "@/components/Casca";
 
 export default function Entrar() {
   const { token } = useParams<{ token: string }>();
@@ -41,9 +42,9 @@ export default function Entrar() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-5 px-5 py-10">
+    <Casca largura="estreita" centro>
       {carregando && <Carregando />}
-      {erro && (erro.status === 404 ? <Aviso erro="Este convite não existe ou foi trocado. Peça o link novo ao organizador." /> : <ErroDeCarga mensagem={erro.message} tentar={recarregar} />)}
+      {erro && (erro.status === 404 ? <Aviso erro="Este convite não existe ou foi trocado. Peça o link novo ao organizador." /> : <ErroDeCarga status={erro.status} mensagem={erro.message} tentar={recarregar} />)}
       {c && !c.jaInscrito && (
         <>
           <div>
@@ -83,13 +84,13 @@ export default function Entrar() {
               <Campo id="whatsapp" rotulo="WhatsApp (opcional)" erro={v.erros.whatsapp} dica="Só o organizador vê. Usado para avisos do bolão; seus dados são apagados quando o bolão acabar." limpar={v.limpar}>
                 <input type="tel" maxLength={30} autoComplete="tel" placeholder="(11) 90000-0000" className="input" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
               </Campo>
-              <button type="submit" className="btn w-full" disabled={enviando}>
+              <button type="submit" className="btn w-full" disabled={enviando} aria-busy={enviando}>
                 {enviando ? "Entrando…" : "Entrar no bolão"}
               </button>
             </form>
           )}
         </>
       )}
-    </main>
+    </Casca>
   );
 }

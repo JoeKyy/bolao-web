@@ -95,7 +95,7 @@ export function SeletorDezenas({ maxDezenas, precoSimples, onConfirmar, rotuloCo
         <p className="text-sm text-muted" aria-live="polite">
           {marcadas.length} de {qtd} escolhidas · <strong className="text-foreground">{formatBRL(precoJogo(qtd, precoSimples))}</strong>
         </p>
-        <button type="button" className="btn" disabled={!completo || enviando} onClick={confirmar}>
+        <button type="button" className="btn" disabled={!completo || enviando} aria-busy={enviando} onClick={confirmar}>
           {enviando ? "Salvando…" : rotuloConfirmar}
         </button>
       </div>
