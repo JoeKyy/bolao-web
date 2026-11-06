@@ -281,10 +281,6 @@ export default function Admin() {
   }
   const conta = eu.dados;
 
-  async function sair() {
-    await api.post("/auth/sair").catch(() => undefined);
-    await eu.recarregar();
-  }
   async function trocarSenha(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFalha(null);
@@ -301,22 +297,12 @@ export default function Admin() {
   const perfis = [conta.admin && "Administrador", conta.tesoureiro && "Tesoureiro"].filter(Boolean).join(" e ");
 
   return (
-    <Casca largura="larga">
-      <header className="flex items-start justify-between gap-4">
+    <Casca largura="larga" menu>
+      <header>
         <div>
           <p className="text-body font-semibold text-brand">{conta.nome || conta.email}</p>
           <h1 className="mt-1 text-h1 font-bold tracking-tight sm:text-display">Meus bolões</h1>
           <p className="mt-1 text-sm text-muted">{perfis ? `Perfil: ${perfis}.` : "Pessoa comum: você participa de bolões."}</p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <button type="button" className="btn-ghost" onClick={sair}>
-            Sair
-          </button>
-          {conta.admin && (
-            <Link href="/admin/usuarios" className="text-sm font-semibold text-brand underline">
-              Usuários
-            </Link>
-          )}
         </div>
       </header>
 
